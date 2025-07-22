@@ -1,19 +1,13 @@
 import { useState, useEffect } from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom"
 import { Toaster } from "@/components/ui/toaster"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
-import { StudentProvider } from "@/contexts/StudentContext"
 import { pageStateManager } from "@/utils/pageState"
-import { StudentStatusProvider } from '@/components/layout/StudentStatusProvider'
 
 // Pages
 import LandingPage from "@/pages/LandingPage"
-import LoginPage from "@/pages/LoginPage"
-import DonatePage from "@/pages/DonatePage"
+import AdminLogin from "@/pages/AdminLogin"
 import NotFound from "@/pages/NotFound"
-import StudentLandingPage from "@/pages/StudentLandingPage"
-import GoogleLoginPage from "@/pages/student/GoogleLoginPage"
-import MobileVerification from "@/pages/student/MobileVerification"
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard"
@@ -24,92 +18,33 @@ import AdminColleges from "@/pages/admin/AdminColleges"
 import AdminDonors from "@/pages/admin/AdminDonors"
 import AdminPaymentAllotment from "@/pages/admin/AdminPaymentAllotment"
 
-// Student Pages
-import StudentDashboard from "@/pages/student/StudentDashboard"
-import StudentProfile from "@/pages/student/StudentProfile"
-import StudentApplication from "@/pages/student/StudentApplication"
-import StudentDocuments from "@/pages/student/StudentDocuments"
-import StudentMessages from "@/pages/student/StudentMessages"
-import StudentPayments from "@/pages/student/StudentPayments"
-import StudentPaymentHistory from "@/pages/student/StudentPaymentHistory"
-import StudentActivities from "@/pages/student/StudentActivities"
-import StudentAcademicResults from "@/pages/student/StudentAcademicResults"
-import StudentAlumni from "@/pages/student/StudentAlumni"
-import ApplyForNext from "@/pages/student/ApplyForNext"
-import StudentAcademicDocuments from "@/pages/student/StudentAcademicDocuments"
-
-// Donor Pages
-import DonorDashboard from "@/pages/donor/DonorDashboard"
-import DonorDonations from "@/pages/donor/DonorDonations"
-import DonorStudents from "@/pages/donor/DonorStudents"
-import DonorPayments from "@/pages/donor/DonorPayments"
-import DonorAutoPayment from "@/pages/donor/DonorAutoPayment"
-import DonorMessages from "@/pages/donor/DonorMessages"
-import DonorNotifications from "@/pages/donor/DonorNotifications"
-import DonorSettings from "@/pages/donor/DonorSettings"
-
-// College Pages
-import CollegeDashboard from "@/pages/college/CollegeDashboard"
-import CollegeStudents from "@/pages/college/CollegeStudents"
-import CollegePaymentVerification from "@/pages/college/CollegePaymentVerification"
-import CollegeReceiptManagement from "@/pages/college/CollegeReceiptManagement"
-import CollegeReports from "@/pages/college/CollegeReports"
-import CollegeMessages from "@/pages/college/CollegeMessages"
-import CollegeNotifications from "@/pages/college/CollegeNotifications"
-import CollegeProfile from "@/pages/college/CollegeProfile"
-
-// New components
+// Admin College Pages
 import RegisteredColleges from './pages/admin/colleges/RegisteredColleges';
 import PendingColleges from './pages/admin/colleges/PendingColleges';
 import ScholarshipAccount from './pages/admin/colleges/ScholarshipAccount';
 import ReceiptManagement from './pages/admin/colleges/ReceiptManagement';
 import CollegeInspection from './pages/admin/CollegeInspection';
-
 import AddCollege from './pages/admin/colleges/AddCollege';
 import EditCollege from './pages/admin/colleges/EditCollege';
 
-// Donor components
+// Admin Donor Pages
 import AllDonors from './pages/admin/donors/AllDonors';
 import DonorMapping from './pages/admin/donors/DonorMapping';
 import DonationReports from './pages/admin/donors/DonationReports';
 import AutoMessaging from './pages/admin/donors/AutoMessaging';
 import DonorForm from './pages/admin/donors/DonorForm';
-import { mockDonors } from './pages/admin/donors/AllDonors';
 
-// Mock user data for demonstration
-const mockUsers = {
-  admin: {
-    id: "admin1",
-    name: "Admin User",
-    email: "admin@scholarship.com",
-    type: "admin" as const,
-    avatar: undefined
-  },
-  student: {
-    id: "student1",
-    name: "Rahul Kumar",
-    email: "rahul@email.com",
-    type: "student" as const,
-    avatar: undefined
-  },
-  donor: {
-    id: "donor1",
-    name: "John Doe",
-    email: "john@email.com",
-    type: "donor" as const,
-    avatar: undefined
-  },
-  college: {
-    id: "college1",
-    name: "Mumbai University",
-    email: "admin@mu.ac.in",
-    type: "college" as const,
-    avatar: undefined
-  }
+// Mock admin user data
+const mockAdminUser = {
+  id: "admin1",
+  name: "Admin User",
+  email: "admin@scholarship.com",
+  type: "admin" as const,
+  avatar: undefined
 }
 
 function App() {
-  const [currentUser, setCurrentUser] = useState<typeof mockUsers.admin | typeof mockUsers.student | typeof mockUsers.donor | typeof mockUsers.college | null>(null)
+  const [currentUser, setCurrentUser] = useState<typeof mockAdminUser | null>(null)
   const [currentPath, setCurrentPath] = useState(() => localStorage.getItem('currentPath') || "/")
   const location = useLocation();
   const navigate = useNavigate();
@@ -122,25 +57,27 @@ function App() {
     pageStateManager.saveState(location.pathname);
   }, [location.pathname]);
 
-  // Enhanced route restoration with scroll position and user state management
+  // Enhanced route restoration with admin auth check
   useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
+    const savedAuth = localStorage.getItem('adminAuth');
     const savedState = pageStateManager.getState();
     
-    if (savedUser) {
+    if (savedAuth) {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setCurrentUser(parsedUser);
-        
-        if (savedState && window.location.pathname === "/") {
-          navigate(savedState.route, { replace: true });
-          if (savedState.scrollPosition) {
-            pageStateManager.restoreScrollPosition(savedState.scrollPosition);
+        const parsedAuth = JSON.parse(savedAuth);
+        if (parsedAuth.type === 'admin') {
+          setCurrentUser(mockAdminUser);
+          
+          if (savedState && window.location.pathname === "/") {
+            navigate(savedState.route, { replace: true });
+            if (savedState.scrollPosition) {
+              pageStateManager.restoreScrollPosition(savedState.scrollPosition);
+            }
           }
         }
       } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('currentUser');
+        console.error('Error parsing saved auth:', error);
+        localStorage.removeItem('adminAuth');
       }
     }
   }, []);
@@ -148,13 +85,15 @@ function App() {
   // Listen for localStorage changes to update currentUser state
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'currentUser') {
+      if (e.key === 'adminAuth') {
         if (e.newValue) {
           try {
-            const parsedUser = JSON.parse(e.newValue);
-            setCurrentUser(parsedUser);
+            const parsedAuth = JSON.parse(e.newValue);
+            if (parsedAuth.type === 'admin') {
+              setCurrentUser(mockAdminUser);
+            }
           } catch (error) {
-            console.error('Error parsing currentUser from storage event:', error);
+            console.error('Error parsing adminAuth from storage event:', error);
           }
         } else {
           setCurrentUser(null);
@@ -166,712 +105,300 @@ function App() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Also check localStorage periodically for changes (for same-tab updates)
+  // Check admin auth state periodically
   useEffect(() => {
-    const checkUserState = () => {
-      const savedUser = localStorage.getItem('currentUser');
-      if (savedUser) {
+    const checkAuthState = () => {
+      const savedAuth = localStorage.getItem('adminAuth');
+      if (savedAuth) {
         try {
-          const parsedUser = JSON.parse(savedUser);
-          if (!currentUser || currentUser.id !== parsedUser.id) {
-            setCurrentUser(parsedUser);
+          const parsedAuth = JSON.parse(savedAuth);
+          if (parsedAuth.type === 'admin' && !currentUser) {
+            setCurrentUser(mockAdminUser);
           }
         } catch (error) {
-          console.error('Error parsing currentUser:', error);
+          console.error('Error parsing adminAuth:', error);
         }
       } else if (currentUser) {
         setCurrentUser(null);
       }
     };
 
-    const interval = setInterval(checkUserState, 1000); // Check every second
+    const interval = setInterval(checkAuthState, 1000);
     return () => clearInterval(interval);
   }, [currentUser]);
-
-  useEffect(() => {
-    if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser))
-  }, [currentUser])
-
-  const handleLogin = (userType: keyof typeof mockUsers) => {
-    setCurrentUser(mockUsers[userType])
-    setCurrentPath(`/${userType}`)
-  }
-
-  const handleLogout = () => {
-    setCurrentUser(null)
-    setCurrentPath("/")
-    localStorage.removeItem('currentUser');
-  }
 
   const handleNavigate = (path: string) => {
     setCurrentPath(path)
   }
 
-  // Protected Route Component
-  const ProtectedRoute = ({ 
-    children, 
-    allowedUserType 
-  }: { 
-    children: React.ReactNode
-    allowedUserType: string 
-  }) => {
-    if (!currentUser || currentUser.type !== allowedUserType) {
-      return <Navigate to="/login" replace />
+  const handleLogout = () => {
+    setCurrentUser(null)
+    setCurrentPath("/")
+    localStorage.removeItem('adminAuth');
+    navigate('/');
+  }
+
+  // Protected Route Component for Admin
+  const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
+    const savedAuth = localStorage.getItem('adminAuth');
+    if (!savedAuth) {
+      return <Navigate to="/admin/login" replace />
     }
+    
+    try {
+      const parsedAuth = JSON.parse(savedAuth);
+      if (parsedAuth.type !== 'admin') {
+        return <Navigate to="/admin/login" replace />
+      }
+    } catch {
+      return <Navigate to="/admin/login" replace />
+    }
+    
     return <>{children}</>
   }
 
-  // Add a wrapper component for edit donor
-  function EditDonorWrapper({ onSubmit }: { onSubmit: (donor: any) => void }) {
-    const { id } = useParams();
-    const donor = mockDonors.find(d => d.id === id);
-    console.log('EditDonorWrapper id:', id, 'donor:', donor);
-    if (!donor) {
-      return <div style={{ padding: 32, textAlign: 'center', color: 'red' }}>Donor not found for ID: {id}</div>;
-    }
-    return <DonorForm mode="edit" donor={donor} onSubmit={onSubmit} />;
-  }
-
   return (
-    <StudentProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<StudentLandingPage />} />
-          <Route path="/home" element={<LandingPage />} />
-          <Route path="/donate" element={<DonatePage />} />
-          <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-          <Route path="/student/google-login" element={<GoogleLoginPage />} />
-          <Route path="/mobile-verification" element={<MobileVerification />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout
-                userType="admin"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <AdminDashboard />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/messages" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout
-                userType="admin"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <AdminMessages />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/notifications" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout
-                userType="admin"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <AdminNotifications />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/students/all" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminStudents initialTab="all" />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/students/applied" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminStudents initialTab="applied" />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/students/approved" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminStudents initialTab="approved" />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/students/active" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminStudents initialTab="active" />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/students/inactive" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminStudents initialTab="inactive" />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin/students/alumni" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminStudents initialTab="alumni" />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+    <div className="min-h-screen bg-gray-50">
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <ProtectedAdminRoute>
+            <Navigate to="/admin/dashboard" replace />
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/dashboard" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout
+              userType="admin"
+              userName={currentUser?.name || ""}
+              userAvatar={currentUser?.avatar}
+              currentPath={currentPath}
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+            >
+              <AdminDashboard />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/messages" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout
+              userType="admin"
+              userName={currentUser?.name || ""}
+              userAvatar={currentUser?.avatar}
+              currentPath={currentPath}
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+            >
+              <AdminMessages />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/notifications" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout
+              userType="admin"
+              userName={currentUser?.name || ""}
+              userAvatar={currentUser?.avatar}
+              currentPath={currentPath}
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+            >
+              <AdminNotifications />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/all" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminStudents initialTab="all" />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/applied" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminStudents initialTab="applied" />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/approved" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminStudents initialTab="approved" />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/active" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminStudents initialTab="active" />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/inactive" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminStudents initialTab="inactive" />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/alumni" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminStudents initialTab="alumni" />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/colleges" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminColleges />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminColleges />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/colleges/add" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AddCollege />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges/add" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AddCollege />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/colleges/edit/:id" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <EditCollege />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges/edit/:id" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <EditCollege />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/donors" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminDonors />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/donors" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminDonors />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/donors/all" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AllDonors />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/donors/all" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AllDonors />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/donors/add" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <DonorForm mode="add" onSubmit={() => {}} />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/donors/add" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <DonorForm mode="add" onSubmit={() => {}} />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/donors/edit/:id" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <EditDonorWrapper onSubmit={() => {}} />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/donors/mapping" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <DonorMapping />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/donors/mapping" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <DonorMapping />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/donors/messaging" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AutoMessaging />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/donors/messaging" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AutoMessaging />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges/registered" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <RegisteredColleges />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/colleges/registered" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <RegisteredColleges />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges/pending" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <PendingColleges />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/colleges/pending" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <PendingColleges />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges/scholarship-account" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <ScholarshipAccount />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/colleges/scholarship-account" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <ScholarshipAccount />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges/receipt-management" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <ReceiptManagement />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/students/receipts" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <ReceiptManagement />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/colleges/inspection" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <CollegeInspection />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/college-inspection" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <CollegeInspection />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        <Route path="/admin/donors/reports" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <DonationReports />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
+        <Route path="/admin/payment-allotment" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminPaymentAllotment />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
 
-          <Route path="/admin/payments" element={
-            <ProtectedRoute allowedUserType="admin">
-              <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate}>
-                <AdminPaymentAllotment />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          {/* Student Routes */}
-          <Route path="/student" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentDashboard />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/profile" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentProfile />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/application" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentApplication />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/documents" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentDocuments />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/messages" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentMessages />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-
-          
-          <Route path="/student/payments" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentPayments />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/academic-results" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentAcademicResults />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/alumni" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentAlumni />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/student/apply-next" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <ApplyForNext />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/student/academic-documents" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentAcademicDocuments />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/payment-history" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentPaymentHistory />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/activities" element={
-            <ProtectedRoute allowedUserType="student">
-              <StudentStatusProvider>
-                <DashboardLayout
-                  userType="student"
-                  userName={currentUser?.name || ""}
-                  userAvatar={currentUser?.avatar}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigate}
-                >
-                  <StudentActivities />
-                </DashboardLayout>
-              </StudentStatusProvider>
-            </ProtectedRoute>
-          } />
-          
-          {/* Donor Routes */}
-          <Route path="/donor" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorDashboard />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/donations" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorDonations />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/students" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorStudents />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/payments" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorPayments />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/auto-payment" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorAutoPayment />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/messages" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorMessages />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/notifications" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorNotifications />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/settings" element={
-            <ProtectedRoute allowedUserType="donor">
-              <DashboardLayout
-                userType="donor"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <DonorSettings />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          {/* College Routes */}
-          <Route path="/college" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegeDashboard />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/college/students" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegeStudents />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/college/payments" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegePaymentVerification />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/college/receipts" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegeReceiptManagement />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/college/reports" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegeReports />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/college/messages" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegeMessages />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/college/notifications" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegeNotifications />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/college/settings" element={
-            <ProtectedRoute allowedUserType="college">
-              <DashboardLayout
-                userType="college"
-                userName={currentUser?.name || ""}
-                userAvatar={currentUser?.avatar}
-                currentPath={currentPath}
-                onNavigate={handleNavigate}
-              >
-                <CollegeProfile />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+        {/* Catch all route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       
-      {/* Toast Notifications */}
       <Toaster />
-    </StudentProvider>
+    </div>
   )
 }
 
-export default App
+function AppWrapper() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  )
+}
+
+export default AppWrapper

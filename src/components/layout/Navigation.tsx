@@ -31,10 +31,10 @@ import {
   LogOut
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useStudentStatus } from "./StudentStatusProvider";
+// Removed StudentStatusProvider import for admin-only setup
 
 interface NavigationProps {
-  userType: 'admin' | 'student' | 'donor' | 'college'
+  userType: 'admin'
   className?: string
   closeSidebar?: () => void
 }
@@ -52,9 +52,6 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Add this for student status
-  const { status } = userType === 'student' ? useStudentStatus() : { status: undefined };
-
   const toggleExpanded = (title: string) => {
     setExpandedItems(prev => 
       prev.includes(title) 
@@ -64,209 +61,50 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
   }
 
   const getNavItems = (): NavItem[] => {
-    switch (userType) {
-      case 'admin':
-        return [
+    return [
+      {
+        title: "Dashboard",
+        path: "/admin/dashboard",
+        icon: <LayoutDashboard className="h-4 w-4" />
+      },
+      {
+        title: "Students",
+        path: "/admin/students",
+        icon: <GraduationCap className="h-4 w-4" />,
+        children: [
           {
-            title: "Dashboard",
-            path: "/admin",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            title: "All Students",
+            path: "/admin/students/all",
+            icon: <Users className="h-4 w-4" />
           },
           {
-            title: "Students",
-            path: "/admin/students",
-            icon: <GraduationCap className="h-4 w-4" />,
-            children: [
-              {
-                title: "All Students",
-                path: "/admin/students/all",
-                icon: <Users className="h-4 w-4" />
-              },
-              {
-                title: "Applied Students",
-                path: "/admin/students/applied",
-                icon: <FileText className="h-4 w-4" />,
-                badge: 15
-              },
-              {
-                title: "Approved Students",
-                path: "/admin/students/approved",
-                icon: <UserCheck className="h-4 w-4" />
-              },
-              {
-                title: "Alumni",
-                path: "/admin/students/alumni",
-                icon: <Award className="h-4 w-4" />
-              },
-              {
-                title: "Receipt Management",
-                path: "/admin/students/receipts",
-                icon: <Receipt className="h-4 w-4" />
-              }
-            ]
-          },
-          {
-            title: "Colleges",
-            path: "/admin/colleges",
-            icon: <Building2 className="h-4 w-4" />,
-            children: [
-              {
-                title: "Registered Colleges",
-                path: "/admin/colleges/registered",
-                icon: <Building2 className="h-4 w-4" />
-              },
-              {
-                title: "Pending Colleges",
-                path: "/admin/colleges/pending",
-                icon: <FileCheck className="h-4 w-4" />,
-                badge: 8
-              }
-              // Scholarship Account and Receipt Management removed from here
-            ]
-          },
-          {
-            title: "Donors",
-            path: "/admin/donors",
-            icon: <Heart className="h-4 w-4" />,
-            children: [
-              {
-                title: "All Donors",
-                path: "/admin/donors/all",
-                icon: <Users className="h-4 w-4" />
-              },
-              {
-                title: "Auto Messaging",
-                path: "/admin/donors/messaging",
-                icon: <MessageSquare className="h-4 w-4" />
-              }
-            ]
-          },
-          {
-            title: "Payment Allotment",
-            path: "/admin/payments",
-            icon: <CreditCard className="h-4 w-4" />
-          },
-          {
-            title: "Messages",
-            path: "/admin/messages",
-            icon: <MessageSquare className="h-4 w-4" />,
-            badge: 3
-          },
-          {
-            title: "Notifications",
-            path: "/admin/notifications",
-            icon: <Bell className="h-4 w-4" />,
-            badge: 5
-          },
-          //   title: "Reports",
-          //   path: "/admin/reports",
-          //   icon: <BarChart3 className="h-4 w-4" />
-          // },
-          {
-            title: "Logout",
-            path: "/logout",
-            icon: <LogOut className="h-4 w-4" /> 
-          }
-          
-        ]
-
-      case 'student':
-        // No navigation items for students - they only have profile dropdown
-        return [];
-
-      case 'donor':
-        return [
-          {
-            title: "Dashboard",
-            path: "/donor",
-            icon: <LayoutDashboard className="h-4 w-4" />
-          },
-          {
-            title: "My Donations",
-            path: "/donor/donations",
-            icon: <Heart className="h-4 w-4" />
-          },
-          {
-            title: "Sponsored Students",
-            path: "/donor/students",
-            icon: <GraduationCap className="h-4 w-4" />
-          },
-          {
-            title: "Payment History",
-            path: "/donor/payments",
-            icon: <CreditCard className="h-4 w-4" />
-          },
-          {
-            title: "Auto Payment",
-            path: "/donor/auto-payment",
-            icon: <TrendingUp className="h-4 w-4" />
-          },
-          {
-            title: "Messages",
-            path: "/donor/messages",
-            icon: <MessageSquare className="h-4 w-4" />
-          },
-          {
-            title: "Notifications",
-            path: "/donor/notifications",
-            icon: <Bell className="h-4 w-4" />,
-            badge: 2
-          },
-          {
-            title: "Logout",
-            path: "/logout",
-            icon: <LogOut className="h-4 w-4" />
+            title: "Applied Students",
+            path: "/admin/students/applied",
+            icon: <FileText className="h-4 w-4" />
           }
         ]
-
-      case 'college':
-        return [
-          {
-            title: "Dashboard",
-            path: "/college",
-            icon: <LayoutDashboard className="h-4 w-4" />
-          },
-          {
-            title: "Students",
-            path: "/college/students",
-            icon: <GraduationCap className="h-4 w-4" />
-          },
-          {
-            title: "Payment Verification",
-            path: "/college/payments",
-            icon: <CreditCard className="h-4 w-4" />,
-            badge: 12
-          },
-          {
-            title: "Receipt Management",
-            path: "/college/receipts",
-            icon: <Receipt className="h-4 w-4" />
-          },
-          {
-            title: "Reports",
-            path: "/college/reports",
-            icon: <BarChart3 className="h-4 w-4" />
-          },
-          {
-            title: "Messages",
-            path: "/college/messages",
-            icon: <MessageSquare className="h-4 w-4" />
-          },
-          {
-            title: "Notifications",
-            path: "/college/notifications",
-            icon: <Bell className="h-4 w-4" />
-          },
-          {
-            title: "Logout",
-            path: "/logout",
-            icon: <LogOut className="h-4 w-4" />
-          }
-        ]
-
-      default:
-        return []
-    }
+      },
+      {
+        title: "Colleges",
+        path: "/admin/colleges",
+        icon: <Building2 className="h-4 w-4" />
+      },
+      {
+        title: "Donors",
+        path: "/admin/donors",
+        icon: <Heart className="h-4 w-4" />
+      },
+      {
+        title: "Messages",
+        path: "/admin/messages",
+        icon: <MessageSquare className="h-4 w-4" />
+      },
+      {
+        title: "Notifications",
+        path: "/admin/notifications",
+        icon: <Bell className="h-4 w-4" />
+      }
+    ]
   }
 
   const navItems = getNavItems()

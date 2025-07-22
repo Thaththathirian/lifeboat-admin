@@ -4,7 +4,7 @@ import { Navigation } from "./Navigation"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
-  userType: 'admin' | 'student' | 'donor' | 'college'
+  userType: 'admin'
   className?: string
 }
 

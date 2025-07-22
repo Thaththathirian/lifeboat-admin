@@ -27,10 +27,11 @@ import { cn } from "@/lib/utils"
 import { useNavigate } from "react-router-dom"
 
 interface HeaderProps {
-  userType: 'admin' | 'student' | 'donor' | 'college'
+  userType: 'admin'
   userName: string
   userAvatar?: string
   onMenuToggle: () => void
+  onLogout?: () => void
 }
 
 interface Notification {
@@ -42,7 +43,7 @@ interface Notification {
   read: boolean
 }
 
-export function Header({ userType, userName, userAvatar, onMenuToggle }: HeaderProps) {
+export function Header({ userType, userName, userAvatar, onMenuToggle, onLogout }: HeaderProps) {
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
@@ -84,44 +85,15 @@ export function Header({ userType, userName, userAvatar, onMenuToggle }: HeaderP
   }
 
   const getUserIcon = () => {
-    switch (userType) {
-      case 'admin':
-        return <Shield className="h-5 w-5" />
-      case 'student':
-        return <GraduationCap className="h-5 w-5" />
-      case 'donor':
-        return <Heart className="h-5 w-5" />
-      case 'college':
-        return <Building2 className="h-5 w-5" />
-      default:
-        return <User className="h-5 w-5" />
-    }
+    return <Shield className="h-5 w-5" />
   }
 
   const getUserColor = () => {
-    switch (userType) {
-      case 'admin':
-        return 'bg-red-100 text-red-600'
-      case 'student':
-        return 'bg-blue-100 text-blue-600'
-      case 'donor':
-        return 'bg-green-100 text-green-600'
-      case 'college':
-        return 'bg-purple-100 text-purple-600'
-      default:
-        return 'bg-gray-100 text-gray-600'
-    }
+    return 'bg-red-100 text-red-600'
   }
 
-  // Add a function to get the portal name
   const getPortalName = () => {
-    switch (userType) {
-      case 'admin': return 'Admin Portal';
-      case 'student': return 'Student Portal';
-      case 'donor': return 'Donor Portal';
-      case 'college': return 'College Portal';
-      default: return 'Portal';
-    }
+    return 'Admin Portal';
   };
 
   return (
@@ -269,7 +241,7 @@ export function Header({ userType, userName, userAvatar, onMenuToggle }: HeaderP
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={onLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
