@@ -1,0 +1,16 @@
+# Google OAuth Configuration
+# Copy this file to .env and fill in your actual values
+
+# Google OAuth Client ID (from Google Cloud Console)
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+
+# Google OAuth Client Secret (from Google Cloud Console)
+VITE_GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+
+# Demo Mode (set to 'true' to test without real Google OAuth)
+VITE_DEMO_MODE=false
+
+# Example values (replace with your actual credentials):
+# VITE_GOOGLE_CLIENT_ID=123456789-abcdefghijklmnop.apps.googleusercontent.com
+# VITE_GOOGLE_CLIENT_SECRET=GOCSPX-YourSecretHere
+# VITE_DEMO_MODE=true 
