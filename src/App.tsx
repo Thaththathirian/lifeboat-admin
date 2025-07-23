@@ -394,7 +394,7 @@ function App() {
         <Route path="/admin/donors/form" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <DonorForm />
+              <DonorForm onSubmit={(donor) => console.log('Donor submitted:', donor)} mode="add" />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
