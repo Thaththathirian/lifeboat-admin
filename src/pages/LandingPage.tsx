@@ -1,9 +1,9 @@
-import { useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Shield } from "lucide-react"
+import React from 'react';
+import ZohoOAuthLogin from '@/components/ZohoOAuthLogin';
+import { getZohoOAuthConfig } from '@/config/zoho-oauth';
 
-export default function LandingPage() {
-  const navigate = useNavigate()
+const LandingPage: React.FC = () => {
+  const config = getZohoOAuthConfig();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-8">
@@ -13,41 +13,16 @@ export default function LandingPage() {
           Administrative Portal for Managing Scholarship Programs
         </p>
       </div>
-
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6">
-            <Shield className="h-10 w-10 text-red-600" />
-          </div>
-          
-          <h2 className="text-3xl font-bold mb-2 text-gray-900">Admin Portal</h2>
-          <p className="text-gray-600 mb-6">Manage the entire scholarship platform</p>
-          
-          <div className="space-y-2 mb-8 text-left">
-            {[
-              'User Management',
-              'Payment Allotment', 
-              'Reports & Analytics',
-              'Global Messaging',
-              'Platform Configuration'
-            ].map((feature, idx) => (
-              <div key={idx} className="flex items-center gap-3 text-gray-700">
-                <div className="w-2 h-2 bg-red-500 rounded-full" />
-                {feature}
-              </div>
-            ))}
-          </div>
-
-          <Button
-            size="lg"
-            className="w-full"
-            onClick={() => navigate('/admin/login')}
-          >
-            <Shield className="mr-2 h-4 w-4" />
-            Access Admin Portal
-          </Button>
-        </div>
+      
+      <ZohoOAuthLogin />
+      
+      <div className="mt-8 text-xs text-gray-500 text-center space-y-1">
+        <p>Redirect URL: {config.REDIRECT_URL}</p>
+        <p>Environment: {import.meta.env.MODE}</p>
+        <p>Backend API: {config.BACKEND_ADMIN_ENDPOINT}</p>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default LandingPage;

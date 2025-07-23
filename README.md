@@ -1,73 +1,151 @@
-# Welcome to your Lovable project
+# Scholarship Connect - Admin Portal
 
-## Project info
+A React-based admin portal for managing scholarship programs with Zoho OAuth integration.
 
-**URL**: https://lovable.dev/projects/a80ab739-30e6-4c91-9b06-b319742154ff
+## 🚀 Quick Start
 
-## How can I edit this code?
+### Prerequisites
+- Node.js & npm installed
+- Zoho Developer Console access
+- Backend API endpoint ready
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/a80ab739-30e6-4c91-9b06-b319742154ff) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Step 1: Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Navigate to the project directory
+cd lifeboat-admin
 
-# Step 3: Install the necessary dependencies.
+# Step 3: Install dependencies
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Set up environment variables
+cp zoho-env-template.txt .env
+# Edit .env with your actual Zoho credentials
+
+# Step 5: Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🔐 Environment Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Required Environment Variables
 
-**Use GitHub Codespaces**
+Create a `.env` file with the following variables:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```env
+# Zoho OAuth Credentials (REQUIRED)
+VITE_ZOHO_CLIENT_ID=your_zoho_client_id
+VITE_ZOHO_CLIENT_SECRET=your_zoho_client_secret
 
-## What technologies are used for this project?
+# Application URLs (REQUIRED)
+VITE_HOMEPAGE_URL=http://localhost:8082
+VITE_REDIRECT_URL=http://localhost:8082/
 
-This project is built with:
+# Backend API (REQUIRED)
+VITE_BACKEND_ADMIN_ENDPOINT=http://localhost/lifeboat/OAuth/Admin
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Security Features
 
-## How can I deploy this project?
+- ✅ **No hardcoded secrets** - All sensitive data in environment variables
+- ✅ **Validation on startup** - App fails fast if required variables missing
+- ✅ **Clear error messages** - Easy to identify configuration issues
+- ✅ **Environment-specific config** - Different values for dev/production
 
-Simply open [Lovable](https://lovable.dev/projects/a80ab739-30e6-4c91-9b06-b319742154ff) and click on Share -> Publish.
+## 🔧 Configuration
 
-## Can I connect a custom domain to my Lovable project?
+### Zoho OAuth Setup
 
-Yes, you can!
+1. **Create OAuth App** in Zoho Developer Console
+2. **Set Redirect URL** to `http://localhost:8082/`
+3. **Copy credentials** to your `.env` file
+4. **Configure backend** to handle OAuth callbacks
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Backend API Requirements
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Your backend at `VITE_BACKEND_ADMIN_ENDPOINT` must:
+
+- Accept POST requests with OAuth authorization code
+- Handle CORS from your frontend domain
+- Exchange code for token with Zoho
+- Return user data in expected format
+
+## 🏗️ Architecture
+
+### Frontend Structure
+```
+src/
+├── components/          # UI components
+├── pages/              # Page components
+│   └── admin/         # Admin pages
+├── config/             # Configuration
+├── utils/              # Utilities
+└── types/              # TypeScript types
+```
+
+### Key Features
+- **Single-page OAuth login** - Direct Zoho authentication
+- **Protected routes** - Admin-only access
+- **Real-time validation** - Environment variable checks
+- **Error handling** - Comprehensive error management
+
+## 🛡️ Security
+
+### Environment Variables Only
+- No hardcoded credentials in source code
+- All sensitive data in `.env` file
+- Validation prevents missing variables
+- Safe for version control
+
+### OAuth Flow
+1. User visits landing page
+2. Clicks "Login with Zoho"
+3. Redirected to Zoho OAuth
+4. Returns with authorization code
+5. Code sent to backend API
+6. User authenticated and redirected to dashboard
+
+## 📚 Documentation
+
+- [Security Improvements](SECURITY_IMPROVEMENTS.md) - Environment variable setup
+- [Backend API Integration](BACKEND_API_INTEGRATION.md) - API requirements
+- [Environment Setup](ENVIRONMENT_SETUP.md) - Detailed setup guide
+
+## 🚀 Deployment
+
+### Development
+```sh
+npm run dev
+```
+
+### Production
+```sh
+npm run build
+npm run preview
+```
+
+### Environment Variables for Production
+```env
+VITE_HOMEPAGE_URL=https://yourdomain.com
+VITE_REDIRECT_URL=https://yourdomain.com/
+VITE_BACKEND_ADMIN_ENDPOINT=https://yourdomain.com/api/oauth/admin
+```
+
+## 🛠️ Technologies
+
+- **Frontend**: React, TypeScript, Vite
+- **UI**: shadcn-ui, Tailwind CSS
+- **Authentication**: Zoho OAuth 2.0
+- **State Management**: React hooks, localStorage
+- **Build Tool**: Vite
+
+## 📝 License
+
+This project is part of the Scholarship Connect platform.
+
+---
+
+**Note**: Never commit your `.env` file to version control. Use `.env.example` for templates.

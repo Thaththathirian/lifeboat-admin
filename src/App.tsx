@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { Toaster } from "@/components/ui/toaster"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { pageStateManager } from "@/utils/pageState"
+import { useToast } from "@/components/ui/use-toast" // Added missing import
 
 // Pages
 import LandingPage from "@/pages/LandingPage"
-import AdminLogin from "@/pages/AdminLogin"
 import NotFound from "@/pages/NotFound"
 
 // Admin Pages
@@ -17,6 +17,8 @@ import AdminStudents from "@/pages/admin/AdminStudents"
 import AdminColleges from "@/pages/admin/AdminColleges"
 import AdminDonors from "@/pages/admin/AdminDonors"
 import AdminPaymentAllotment from "@/pages/admin/AdminPaymentAllotment"
+import AdminOAuthCallback from "@/pages/admin/AdminOAuthCallback"
+import AdminOAuthTest from "@/pages/admin/AdminOAuthTest"
 
 // Admin College Pages
 import RegisteredColleges from './pages/admin/colleges/RegisteredColleges';
@@ -41,6 +43,65 @@ const mockAdminUser = {
   email: "admin@scholarship.com",
   type: "admin" as const,
   avatar: undefined
+}
+
+// Protected Route Component for Admin
+const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const savedAuth = localStorage.getItem('adminAuth');
+  console.log('🔍 ProtectedAdminRoute: Checking auth...');
+  console.log('🔍 Saved auth:', savedAuth ? 'Present' : 'Not present');
+  
+  if (!savedAuth) {
+    console.log('❌ No auth found, redirecting to login');
+    return <Navigate to="/" replace />
+  }
+  
+  try {
+    const parsedAuth = JSON.parse(savedAuth);
+    console.log('🔍 Parsed auth:', parsedAuth);
+    
+    if (parsedAuth.type !== 'admin') {
+      console.log('❌ Auth type is not admin, redirecting to login');
+      return <Navigate to="/" replace />
+    }
+    
+    console.log('✅ Auth is valid, showing protected content');
+  } catch (error) {
+    console.log('❌ Error parsing auth, redirecting to login');
+    return <Navigate to="/" replace />
+  }
+  
+  return <>{children}</>
+}
+
+// Admin Dashboard Component
+function AdminDashboardWithOAuth({ 
+  currentUser, 
+  currentPath, 
+  handleNavigate, 
+  handleLogout,
+  setCurrentUser
+}: {
+  currentUser: typeof mockAdminUser | null;
+  currentPath: string;
+  handleNavigate: (path: string) => void;
+  handleLogout: () => void;
+  setCurrentUser: (user: typeof mockAdminUser | null) => void;
+}) {
+  return (
+    <ProtectedAdminRoute>
+      <DashboardLayout
+        userType="admin"
+        userName={currentUser?.name || ""}
+        userAvatar={currentUser?.avatar}
+        currentPath={currentPath}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      >
+        <AdminDashboard />
+      </DashboardLayout>
+    </ProtectedAdminRoute>
+  );
 }
 
 function App() {
@@ -138,31 +199,14 @@ function App() {
     navigate('/');
   }
 
-  // Protected Route Component for Admin
-  const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
-    const savedAuth = localStorage.getItem('adminAuth');
-    if (!savedAuth) {
-      return <Navigate to="/admin/login" replace />
-    }
-    
-    try {
-      const parsedAuth = JSON.parse(savedAuth);
-      if (parsedAuth.type !== 'admin') {
-        return <Navigate to="/admin/login" replace />
-      }
-    } catch {
-      return <Navigate to="/admin/login" replace />
-    }
-    
-    return <>{children}</>
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        {/* OAuth Callback Route - Must be public */}
+        <Route path="/oauth/callback" element={<AdminOAuthCallback />} />
         
         {/* Admin Routes */}
         <Route path="/admin" element={
@@ -172,18 +216,13 @@ function App() {
         } />
         
         <Route path="/admin/dashboard" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout
-              userType="admin"
-              userName={currentUser?.name || ""}
-              userAvatar={currentUser?.avatar}
-              currentPath={currentPath}
-              onNavigate={handleNavigate}
-              onLogout={handleLogout}
-            >
-              <AdminDashboard />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
+          <AdminDashboardWithOAuth 
+            currentUser={currentUser} 
+            currentPath={currentPath} 
+            handleNavigate={handleNavigate} 
+            handleLogout={handleLogout} 
+            setCurrentUser={setCurrentUser}
+          />
         } />
         
         <Route path="/admin/messages" element={
@@ -243,27 +282,11 @@ function App() {
         <Route path="/admin/students/active" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminStudents initialTab="active" />
+              <AdminDashboard />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
         
-        <Route path="/admin/students/inactive" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminStudents initialTab="inactive" />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-        
-        <Route path="/admin/students/alumni" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminStudents initialTab="alumni" />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
         <Route path="/admin/colleges" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -271,63 +294,7 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
-        <Route path="/admin/colleges/add" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AddCollege />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
-        <Route path="/admin/colleges/edit/:id" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <EditCollege />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
-        <Route path="/admin/donors" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminDonors />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
-        <Route path="/admin/donors/all" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AllDonors />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
-        <Route path="/admin/donors/add" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <DonorForm mode="add" onSubmit={() => {}} />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
-        <Route path="/admin/donors/mapping" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <DonorMapping />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
-        <Route path="/admin/donors/messaging" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AutoMessaging />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-
+        
         <Route path="/admin/colleges/registered" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -335,7 +302,7 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
+        
         <Route path="/admin/colleges/pending" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -343,7 +310,7 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
+        
         <Route path="/admin/colleges/scholarship-account" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -351,7 +318,7 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
+        
         <Route path="/admin/colleges/receipt-management" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -359,7 +326,7 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
+        
         <Route path="/admin/colleges/inspection" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -367,7 +334,47 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
+        
+        <Route path="/admin/colleges/add" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AddCollege />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/colleges/edit/:id" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <EditCollege />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/donors" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminDonors />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/donors/all" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AllDonors />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/donors/mapping" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <DonorMapping />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
         <Route path="/admin/donors/reports" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -375,7 +382,23 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
+        
+        <Route path="/admin/donors/messaging" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AutoMessaging />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/donors/form" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <DonorForm />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
         <Route path="/admin/payment-allotment" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
@@ -383,8 +406,16 @@ function App() {
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
-
-        {/* Catch all route */}
+        
+        <Route path="/admin/oauth-test" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminOAuthTest />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       

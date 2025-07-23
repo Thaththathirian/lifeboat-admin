@@ -1,0 +1,28 @@
+# Zoho OAuth Configuration
+# Copy this file to .env and fill in your actual values
+# ALL VALUES BELOW ARE REQUIRED - DO NOT LEAVE ANY EMPTY
+
+# Zoho OAuth Client ID (from Zoho Developer Console)
+VITE_ZOHO_CLIENT_ID=1000.20GXMY1L17S9P8A6NU7UZVCE2BGKHT
+
+# Zoho OAuth Client Secret (from Zoho Developer Console)
+VITE_ZOHO_CLIENT_SECRET=10028ea80b6b2f85b3e924f511442a56b3b25ed833
+
+# Application URLs
+VITE_HOMEPAGE_URL=http://localhost:8082
+VITE_REDIRECT_URL=http://localhost:8082/oauth/callback
+
+# Backend API Endpoint (REQUIRED)
+VITE_BACKEND_ADMIN_ENDPOINT=http://localhost/lifeboat/OAuth/Admin
+
+# Zoho OAuth Endpoints (optional - will use defaults if not set)
+VITE_ZOHO_AUTHORIZATION_URL=https://accounts.zoho.com/oauth/v2/auth
+VITE_ZOHO_TOKEN_URL=https://accounts.zoho.com/oauth/v2/token
+VITE_ZOHO_USER_INFO_URL=https://accounts.zoho.com/oauth/user/info
+
+# Backend API Endpoints (optional - will use defaults if not set)
+VITE_BACKEND_TOKEN_ENDPOINT=/api/zoho/oauth/token
+VITE_BACKEND_USER_INFO_ENDPOINT=/api/zoho/oauth/userinfo
+
+# OAuth Scope (optional - will use default if not set)
+VITE_ZOHO_OAUTH_SCOPE=AaaServer.profile.READ 
