@@ -66,7 +66,22 @@ export const authenticateWithBackend = async (
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('Backend error response:', errorData);
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      
+      // Extract meaningful error message
+      let errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
+      
+      // Handle specific error cases
+      if (response.status === 401) {
+        errorMessage = 'Unauthorized - Your account is not authorized to access this system';
+      } else if (response.status === 403) {
+        errorMessage = 'Forbidden - You don\'t have permission to access this resource';
+      } else if (response.status === 404) {
+        errorMessage = 'Service not found - The requested service is currently unavailable';
+      } else if (response.status === 500) {
+        errorMessage = 'Server error - We\'re experiencing technical difficulties';
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
 import { googleProvider } from '@/utils/googleOAuth';
+import { ErrorDisplay } from '@/components/ui/error-display';
 
 interface DebugInfo {
   clientId: string;
@@ -164,14 +165,21 @@ export default function GoogleOAuthDebug() {
             </Button>
           </div>
           
-          <Alert>
-            <div className="flex items-center gap-2">
-              {getTestResultIcon()}
-              <AlertDescription>
-                {getTestResultText()}
-              </AlertDescription>
-            </div>
-          </Alert>
+          {debugInfo.testResult === 'error' && debugInfo.errorMessage ? (
+            <ErrorDisplay 
+              error={debugInfo.errorMessage}
+              showTechnicalDetails={true}
+            />
+          ) : (
+            <Alert>
+              <div className="flex items-center gap-2">
+                {getTestResultIcon()}
+                <AlertDescription>
+                  {getTestResultText()}
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
         </div>
 
         {/* Troubleshooting Tips */}

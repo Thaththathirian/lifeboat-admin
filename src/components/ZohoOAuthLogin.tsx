@@ -5,6 +5,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Shield, User, AlertCircle } from 'lucide-react';
 import { ZohoAuthService } from '@/utils/zohoAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { ErrorDisplay } from '@/components/ui/error-display';
+import { ErrorMessageMapper } from '@/utils/errorMessages';
 
 interface ZohoOAuthLoginProps {
   onSuccess?: (userInfo: any) => void;
@@ -37,16 +39,14 @@ export default function ZohoOAuthLogin({ onSuccess, onError, className = '' }: Z
     } catch (error) {
       console.error('❌ Zoho OAuth login error:', error);
       
-      let errorMessage = 'Failed to initiate Zoho OAuth login';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
+      const errorMessage = error instanceof Error ? error.message : String(error);
       setError(errorMessage);
       
+      // Use ErrorMessageMapper for toast notification
+      const errorInfo = ErrorMessageMapper.mapError(error);
       toast({
-        title: "OAuth Error",
-        description: errorMessage,
+        title: errorInfo.title,
+        description: errorInfo.message,
         variant: "destructive"
       });
 
@@ -73,10 +73,7 @@ export default function ZohoOAuthLogin({ onSuccess, onError, className = '' }: Z
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <ErrorDisplay error={error} />
         )}
 
         <div className="space-y-2">

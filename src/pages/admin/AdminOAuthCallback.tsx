@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Loader2, XCircle, AlertCircle } from 'lucide-react';
 import { ZohoAuthService } from '@/utils/zohoAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { ErrorMessageMapper, ErrorInfo } from '@/utils/errorMessages';
+import { ErrorDisplay } from '@/components/ui/error-display';
 
 interface OAuthState {
-  status: 'loading' | 'success' | 'error';
+  status: 'loading' | 'error';
   message: string;
   error?: string;
-  userInfo?: any;
+  errorInfo?: ErrorInfo;
 }
 
 export default function AdminOAuthCallback() {
@@ -22,9 +24,36 @@ export default function AdminOAuthCallback() {
     status: 'loading',
     message: 'Processing OAuth callback...'
   });
+  const isProcessingRef = useRef(false);
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
+      // Check if this callback has already been processed
+      const callbackId = searchParams.get('code');
+      const processedKey = `oauth_processed_${callbackId}`;
+      
+      if (sessionStorage.getItem(processedKey)) {
+        console.log('🔍 OAuth callback already processed, skipping...');
+        return;
+      }
+      
+      // Prevent multiple calls
+      if (isProcessingRef.current) {
+        console.log('🔍 OAuth callback already in progress, skipping...');
+        return;
+      }
+      
+      // Check if we have a code parameter
+      if (!callbackId) {
+        console.log('🔍 No authorization code found in URL, skipping...');
+        return;
+      }
+      
+      console.log('🔍 Starting OAuth callback processing for code:', callbackId);
+      
+      isProcessingRef.current = true;
+      sessionStorage.setItem(processedKey, 'true');
+      
       try {
         console.log('🔍 OAuth callback initiated');
         
@@ -74,10 +103,12 @@ export default function AdminOAuthCallback() {
         // Check for OAuth errors
         if (error) {
           console.error('❌ OAuth error received:', error);
+          const errorInfo = ErrorMessageMapper.mapError(error);
           setState({
             status: 'error',
-            message: 'OAuth authorization failed',
-            error: error
+            message: errorInfo.title,
+            error: error,
+            errorInfo: errorInfo
           });
           return;
         }
@@ -85,31 +116,44 @@ export default function AdminOAuthCallback() {
         // Check if authorization code is present
         if (!code) {
           console.error('❌ No authorization code received');
+          const errorInfo = ErrorMessageMapper.mapError('Missing authorization code');
           setState({
             status: 'error',
-            message: 'No authorization code received from Zoho',
-            error: 'Missing authorization code'
+            message: errorInfo.title,
+            error: 'Missing authorization code',
+            errorInfo: errorInfo
           });
           return;
         }
 
-        console.log('✅ Authorization code received, exchanging for token...');
+        console.log('✅ Authorization code received, sending to backend...');
         setState({
           status: 'loading',
-          message: 'Exchanging authorization code for access token...'
+          message: 'Sending authorization code to backend...'
         });
 
-        // Exchange code for token with domain suffix
-        const tokenResponse = await ZohoAuthService.exchangeCodeForToken(code, domainSuffix);
-        console.log('✅ Token received:', tokenResponse);
+        // Send code to backend API (this handles the complete OAuth flow)
+        const tokenResponse = await ZohoAuthService.sendCodeToBackend(code, domainSuffix);
+        console.log('✅ Backend authentication successful:', tokenResponse);
 
         setState({
           status: 'loading',
-          message: 'Getting user information...'
+          message: 'Processing user information...'
         });
 
-        // Get user information
-        const userInfo = await ZohoAuthService.getUserInfo(tokenResponse.access_token);
+        // Get user information from the backend response
+        let userInfo = tokenResponse.user_info;
+        if (!userInfo) {
+          // Create default user info if not provided by backend
+          console.log('⚠️ No user info provided by backend, creating default user info');
+          userInfo = {
+            id: 'admin',
+            name: 'Admin User',
+            email: 'admin@lifeboat.com',
+            role: 'admin'
+          };
+        }
+        
         console.log('✅ User info received:', userInfo);
 
         // Store authentication data
@@ -125,50 +169,36 @@ export default function AdminOAuthCallback() {
         localStorage.setItem('adminAuth', JSON.stringify(authData));
         console.log('✅ Authentication data stored');
 
-        // Send token to backend API
-        setState({
-          status: 'loading',
-          message: 'Sending token to backend API...'
-        });
-
-        await ZohoAuthService.sendTokenToAPI(tokenResponse.access_token);
-        console.log('✅ Token sent to backend API');
-
-        setState({
-          status: 'success',
-          message: 'OAuth authentication successful!',
-          userInfo: userInfo
-        });
-
         toast({
           title: "Authentication Successful",
           description: `Welcome back, ${userInfo.name}!`,
         });
 
-        // Redirect to admin dashboard after a short delay
-        setTimeout(() => {
-          navigate('/admin/dashboard', { replace: true });
-        }, 2000);
+        // Redirect to admin dashboard immediately
+        navigate('/admin/dashboard', { replace: true });
 
       } catch (error) {
         console.error('❌ OAuth callback error:', error);
         
-        let errorMessage = 'An unexpected error occurred during authentication';
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-
+        // Clear the processed flag on error so user can retry
+        sessionStorage.removeItem(processedKey);
+        
+        const errorInfo = ErrorMessageMapper.mapError(error);
+        
         setState({
           status: 'error',
-          message: 'OAuth authentication failed',
-          error: errorMessage
+          message: errorInfo.title,
+          error: error instanceof Error ? error.message : String(error),
+          errorInfo: errorInfo
         });
 
         toast({
-          title: "Authentication Failed",
-          description: errorMessage,
+          title: errorInfo.title,
+          description: errorInfo.message,
           variant: "destructive"
         });
+      } finally {
+        isProcessingRef.current = false;
       }
     };
 
@@ -179,8 +209,6 @@ export default function AdminOAuthCallback() {
     switch (state.status) {
       case 'loading':
         return <Loader2 className="h-8 w-8 animate-spin text-blue-600" />;
-      case 'success':
-        return <CheckCircle className="h-8 w-8 text-green-600" />;
       case 'error':
         return <XCircle className="h-8 w-8 text-red-600" />;
       default:
@@ -192,8 +220,6 @@ export default function AdminOAuthCallback() {
     switch (state.status) {
       case 'loading':
         return 'border-blue-200 bg-blue-50';
-      case 'success':
-        return 'border-green-200 bg-green-50';
       case 'error':
         return 'border-red-200 bg-red-50';
       default:
@@ -210,33 +236,22 @@ export default function AdminOAuthCallback() {
           </div>
           <CardTitle className="text-xl">
             {state.status === 'loading' && 'Processing Authentication'}
-            {state.status === 'success' && 'Authentication Successful'}
-            {state.status === 'error' && 'Authentication Failed'}
+            {state.status === 'error' && (state.errorInfo?.title || 'Authentication Failed')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-center text-gray-600">
-            {state.message}
+            {state.status === 'error' && state.errorInfo 
+              ? state.errorInfo.message 
+              : state.message
+            }
           </p>
 
-          {state.error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {state.error}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {state.status === 'success' && state.userInfo && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h4 className="font-medium text-green-800 mb-2">User Information</h4>
-              <div className="text-sm text-green-700 space-y-1">
-                <p><strong>Name:</strong> {state.userInfo.name}</p>
-                <p><strong>Email:</strong> {state.userInfo.email}</p>
-                <p><strong>ID:</strong> {state.userInfo.id}</p>
-              </div>
-            </div>
+          {state.status === 'error' && state.error && (
+            <ErrorDisplay 
+              error={state.error} 
+              showTechnicalDetails={true}
+            />
           )}
 
           {state.status === 'error' && (

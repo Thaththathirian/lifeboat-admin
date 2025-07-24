@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,82 +8,8 @@ import { getZohoOAuthConfig } from '@/config/zoho-oauth';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
-
-  useEffect(() => {
-    // Check if this is an OAuth callback
-    const code = searchParams.get('code');
-    const regionOrServer = searchParams.get('accounts-server') || searchParams.get('location');
-    
-    if (code) {
-      handleOAuthCallback(code, regionOrServer);
-    }
-  }, [searchParams]);
-
-  const handleOAuthCallback = async (code: string, regionOrServer?: string) => {
-    setIsProcessingOAuth(true);
-    console.log('🔍 Processing OAuth callback...');
-    console.log('🔍 Code:', code);
-    console.log('🔍 Region/Server:', regionOrServer);
-
-    try {
-      // Validate configuration
-      ZohoAuthService.validateConfiguration();
-
-      // Exchange code for token
-      const tokenResponse = await ZohoAuthService.exchangeCodeForToken(code, regionOrServer);
-      console.log('✅ Token exchange successful:', tokenResponse);
-
-      // Get user info
-      const userInfo = await ZohoAuthService.getUserInfo(tokenResponse.access_token);
-      console.log('✅ User info retrieved:', userInfo);
-
-      // Store authentication data
-      const authData = {
-        type: 'admin',
-        user: userInfo,
-        token: tokenResponse.access_token,
-        refreshToken: tokenResponse.refresh_token,
-        expiresIn: tokenResponse.expires_in,
-        timestamp: Date.now()
-      };
-
-      localStorage.setItem('adminAuth', JSON.stringify(authData));
-      console.log('✅ Authentication data stored');
-
-      // Send token to backend API (optional)
-      try {
-        await ZohoAuthService.sendTokenToAPI(tokenResponse.access_token);
-        console.log('✅ Token sent to backend API');
-      } catch (error) {
-        console.warn('⚠️ Failed to send token to backend API:', error);
-        // Don't fail the login process if backend is not available
-      }
-
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${userInfo.name}!`,
-      });
-
-      // Redirect to dashboard
-      navigate('/admin/dashboard', { replace: true });
-
-    } catch (error) {
-      console.error('❌ OAuth callback error:', error);
-      toast({
-        title: "Login Failed",
-        description: error instanceof Error ? error.message : "An error occurred during login",
-        variant: "destructive",
-      });
-      // Redirect back to login page
-      navigate('/admin/login', { replace: true });
-    } finally {
-      setIsProcessingOAuth(false);
-    }
-  };
 
   const handleZohoLogin = () => {
     setIsLoading(true);
@@ -110,21 +36,6 @@ const AdminLogin: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  if (isProcessingOAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="text-sm text-gray-600">Processing login...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const config = getZohoOAuthConfig();
 

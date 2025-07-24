@@ -7,6 +7,7 @@ export interface ZohoAuthResponse {
   scope?: string;
   refresh_token?: string;
   api_domain?: string;
+  user_info?: ZohoUserInfo;
 }
 
 export interface ZohoUserInfo {
@@ -44,7 +45,22 @@ export interface BackendOAuthResponse {
 export class ZohoAuthService {
   // Get configuration with validation
   private static getConfig() {
-    return getZohoOAuthConfig();
+    console.log('🔍 Loading Zoho OAuth configuration...');
+    console.log('🔍 Environment variables:');
+    console.log('  VITE_ZOHO_CLIENT_ID:', import.meta.env.VITE_ZOHO_CLIENT_ID ? 'present' : 'missing');
+    console.log('  VITE_ZOHO_CLIENT_SECRET:', import.meta.env.VITE_ZOHO_CLIENT_SECRET ? 'present' : 'missing');
+    console.log('  VITE_HOMEPAGE_URL:', import.meta.env.VITE_HOMEPAGE_URL);
+    console.log('  VITE_REDIRECT_URL:', import.meta.env.VITE_REDIRECT_URL);
+    console.log('  VITE_BACKEND_ADMIN_ENDPOINT:', import.meta.env.VITE_BACKEND_ADMIN_ENDPOINT);
+    
+    const config = getZohoOAuthConfig();
+    console.log('✅ Configuration loaded:', {
+      CLIENT_ID: config.CLIENT_ID ? 'present' : 'missing',
+      HOMEPAGE_URL: config.HOMEPAGE_URL,
+      REDIRECT_URL: config.REDIRECT_URL,
+      BACKEND_ADMIN_ENDPOINT: config.BACKEND_ADMIN_ENDPOINT
+    });
+    return config;
   }
 
   // Helper to get Zoho domain based on region or accounts-server
@@ -146,6 +162,12 @@ export class ZohoAuthService {
     console.log('🔍 Backend endpoint:', config.BACKEND_ADMIN_ENDPOINT);
     console.log('🔍 Domain suffix:', regionOrServer);
     
+    // Validate backend endpoint
+    if (!config.BACKEND_ADMIN_ENDPOINT) {
+      console.error('❌ Backend endpoint not configured');
+      throw new Error('Backend endpoint not configured. Please check your environment variables.');
+    }
+    
     const requestData: BackendOAuthRequest = {
       code: code,
       client_id: config.CLIENT_ID,
@@ -186,24 +208,63 @@ export class ZohoAuthService {
         const errorText = await response.text();
         console.error('❌ Backend API error:', response.status, response.statusText);
         console.error('❌ Error response:', errorText);
-        throw new Error(`Backend API error: ${response.status} - ${errorText}`);
+        
+        // Try to parse JSON error response
+        let errorMessage = `Backend API error: ${response.status} - ${errorText}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If JSON parsing fails, use the raw text
+          errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const backendResponse: BackendOAuthResponse = await response.json();
+      const backendResponse = await response.json();
       console.log('✅ Backend API response:', backendResponse);
+      console.log('🔍 Response status field:', backendResponse.status);
+      console.log('🔍 Response message field:', backendResponse.message);
+      console.log('🔍 Response data field:', backendResponse.data);
+      console.log('🔍 Response type:', typeof backendResponse);
+      console.log('🔍 Response keys:', Object.keys(backendResponse));
 
-      if (!backendResponse.success) {
-        throw new Error(backendResponse.error || backendResponse.message || 'Backend API returned error');
+      // Handle the actual backend response format
+      // Backend returns: { status: true, message: "Login successful", data: "..." }
+      if (!backendResponse.status) {
+        console.error('❌ Backend returned error status:', backendResponse);
+        console.error('❌ Backend response status field is falsy');
+        throw new Error(backendResponse.message || backendResponse.error || 'Backend API returned error');
       }
+
+      console.log('✅ Backend response status is true, processing...');
+
+      // Extract token from the data field (JWT token)
+      const accessToken = backendResponse.data || backendResponse.access_token || '';
+      console.log('🔍 Extracted access token:', accessToken ? 'present' : 'missing');
+      console.log('🔍 Access token length:', accessToken.length);
+      
+      if (!accessToken) {
+        console.error('❌ No access token in backend response:', backendResponse);
+        throw new Error('No access token received from backend');
+      }
+
+      console.log('✅ Access token extracted successfully');
 
       // Convert backend response to ZohoAuthResponse format
       const tokenResponse: ZohoAuthResponse = {
-        access_token: backendResponse.access_token || '',
+        access_token: accessToken,
         token_type: 'Bearer',
         expires_in: backendResponse.expires_in || 3600,
         scope: config.OAUTH_SCOPE,
         refresh_token: backendResponse.refresh_token,
-        api_domain: domain
+        api_domain: domain,
+        user_info: backendResponse.user_info || backendResponse.data?.user_info
       };
 
       console.log('✅ Code sent to backend successfully');
