@@ -39,6 +39,35 @@ const getApiBaseUrl = () => {
   return 'http://localhost/lifeboat';
 };
 
+// Get JWT token from localStorage
+const getAuthToken = (): string | null => {
+  try {
+    const adminAuth = localStorage.getItem('adminAuth');
+    if (adminAuth) {
+      const parsedAuth = JSON.parse(adminAuth);
+      return parsedAuth.access_token || parsedAuth.token || null;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
+  }
+};
+
+// Get headers with authentication
+const getAuthHeaders = (): Record<string, string> => {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
+
 // Fetch verified colleges (status=1)
 export const getVerifiedColleges = async (
   limit: number = 10,
@@ -52,10 +81,7 @@ export const getVerifiedColleges = async (
     
     const response = await fetch(apiUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
 
     console.log('Verified colleges response status:', response.status);
@@ -111,10 +137,7 @@ export const getUnverifiedColleges = async (
     
     const response = await fetch(apiUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
 
     console.log('Unverified colleges response status:', response.status);
@@ -167,10 +190,7 @@ export const approveCollege = async (collegeId: string): Promise<{ success: bool
     
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ collegeId }),
     });
 
@@ -202,10 +222,7 @@ export const rejectCollege = async (collegeId: string, reason?: string): Promise
     
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ collegeId, reason }),
     });
 
@@ -244,9 +261,7 @@ export const updateCollegeStatus = async (collegeId: string, status: number): Pr
     
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: formData,
     });
 
@@ -278,9 +293,7 @@ export const deleteCollege = async (collegeId: string): Promise<{ success: boole
     
     const response = await fetch(apiUrl, {
       method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
