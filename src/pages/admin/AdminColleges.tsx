@@ -30,6 +30,7 @@ import {
   approveCollege, 
   rejectCollege,
   updateCollegeStatus,
+  deleteCollege,
   type College 
 } from '@/utils/collegeService';
 
@@ -140,10 +141,9 @@ export default function AdminColleges() {
 
   const handleReject = async (collegeId: string) => {
     try {
-      const response = await updateCollegeStatus(collegeId, 0);
+      const response = await deleteCollege(collegeId);
       if (response.success) {
-        // Refresh both lists to reflect the status change
-        fetchVerifiedColleges();
+        // Refresh only the unverified colleges list since the college is deleted
         fetchUnverifiedColleges();
         // Close detail panel if it's open for this college
         if (selectedCollege?.id === collegeId) {

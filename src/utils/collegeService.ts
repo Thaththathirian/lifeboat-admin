@@ -268,4 +268,37 @@ export const updateCollegeStatus = async (collegeId: string, status: number): Pr
   }
 };
 
+// Delete a college
+export const deleteCollege = async (collegeId: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    console.log('Deleting college:', collegeId);
+    
+    const apiUrl = `${getApiBaseUrl()}/Admin/deleteCollege/${collegeId}`;
+    console.log('API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('College deletion response:', data);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete college:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete college'
+    };
+  }
+};
+
 export type { College, CollegeResponse }; 
