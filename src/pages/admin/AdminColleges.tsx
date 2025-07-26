@@ -29,6 +29,7 @@ import {
   getUnverifiedColleges, 
   approveCollege, 
   rejectCollege,
+  updateCollegeStatus,
   type College 
 } from '@/utils/collegeService';
 
@@ -119,9 +120,10 @@ export default function AdminColleges() {
 
   const handleApprove = async (collegeId: string) => {
     try {
-      const response = await approveCollege(collegeId);
+      const response = await updateCollegeStatus(collegeId, 1);
       if (response.success) {
-        // Refresh the unverified colleges list
+        // Refresh both lists to reflect the status change
+        fetchVerifiedColleges();
         fetchUnverifiedColleges();
         // Close detail panel if it's open for this college
         if (selectedCollege?.id === collegeId) {
@@ -138,9 +140,10 @@ export default function AdminColleges() {
 
   const handleReject = async (collegeId: string) => {
     try {
-      const response = await rejectCollege(collegeId);
+      const response = await updateCollegeStatus(collegeId, 0);
       if (response.success) {
-        // Refresh the unverified colleges list
+        // Refresh both lists to reflect the status change
+        fetchVerifiedColleges();
         fetchUnverifiedColleges();
         // Close detail panel if it's open for this college
         if (selectedCollege?.id === collegeId) {
@@ -152,6 +155,26 @@ export default function AdminColleges() {
       }
     } catch (error) {
       console.error('Error rejecting college:', error);
+    }
+  };
+
+  const handleUnverifyCollege = async (collegeId: string) => {
+    try {
+      const response = await updateCollegeStatus(collegeId, 0);
+      if (response.success) {
+        // Refresh both lists to reflect the status change
+        fetchVerifiedColleges();
+        fetchUnverifiedColleges();
+        // Close detail panel if it's open for this college
+        if (selectedCollege?.id === collegeId) {
+          setDetailPanelOpen(false);
+        }
+      } else {
+        console.error('Failed to unverify college:', response.error);
+        // You might want to show a toast notification here
+      }
+    } catch (error) {
+      console.error('Error unverifying college:', error);
     }
   };
 
@@ -288,8 +311,18 @@ export default function AdminColleges() {
                              variant="ghost"
                              onClick={() => handleViewCollege(college, 'verified')}
                              className="h-8 w-8 p-0"
+                             title="View Details"
                            >
                              <Eye className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             onClick={() => handleUnverifyCollege(college.id)}
+                             className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                             title="Unverify College"
+                           >
+                             <XCircle className="h-4 w-4" />
                            </Button>
                          </div>
                        </TableCell>
@@ -665,6 +698,20 @@ export default function AdminColleges() {
                     >
                       <XCircle className="h-4 w-4 mr-2" />
                       Reject Application
+                    </Button>
+                  </div>
+                )}
+
+                {/* Action Buttons for Verified Colleges */}
+                {selectedCollege.type === 'verified' && (
+                  <div className="space-y-2 pt-4 border-t bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                      onClick={() => handleUnverifyCollege(selectedCollege.id)}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Unverify College
                     </Button>
                   </div>
                 )}

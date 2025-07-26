@@ -227,4 +227,45 @@ export const rejectCollege = async (collegeId: string, reason?: string): Promise
   }
 };
 
+// Update college status (verify/unverify)
+export const updateCollegeStatus = async (collegeId: string, status: number): Promise<{ success: boolean; error?: string }> => {
+  try {
+    console.log('Updating college status:', collegeId, 'to status:', status);
+    
+    const apiUrl = `${getApiBaseUrl()}/Admin/update_college_status`;
+    console.log('API URL:', apiUrl);
+    
+    // Create FormData for the payload
+    const formData = new FormData();
+    formData.append('college_id', collegeId);
+    formData.append('status', status.toString());
+    
+    console.log('Request payload:', { college_id: collegeId, status: status });
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('College status update response:', data);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update college status:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update college status'
+    };
+  }
+};
+
 export type { College, CollegeResponse }; 
