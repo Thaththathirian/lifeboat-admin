@@ -279,7 +279,7 @@ export default function AdminColleges() {
                                                <TableCell className="text-center">{college.representative_name || college.contactPerson}</TableCell>
                         <TableCell className="text-center">{college.representative_mobile || college.phone}</TableCell>
                        <TableCell className="text-center">
-                         <Badge variant="secondary">{college.students || 0} Active</Badge>
+                         <Badge variant="secondary">{college.activeStudents || 0} Active</Badge>
                        </TableCell>
                                                <TableCell className="text-center">
                          <div className="flex gap-1 justify-center">
