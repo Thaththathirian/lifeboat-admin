@@ -16,7 +16,7 @@ export enum StudentStatus {
 }
 
 export interface Student {
-  id: string;
+  id: string | null; // Can be null for students who haven't passed interview/document verification
   name: string;
   email: string;
   mobile: string;

@@ -85,8 +85,11 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
       limit: params.limit.toString(),
     });
 
-    if (params.status !== undefined) {
+    if (params.status !== undefined && params.status !== null) {
       queryParams.append('status', params.status.toString());
+      console.log('🔍 Adding status parameter:', params.status);
+    } else {
+      console.log('🔍 No status parameter (null or undefined)');
     }
 
     if (params.search) {
@@ -143,78 +146,59 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
 
     const data = await response.json();
     console.log('Students API response:', data);
+    console.log('📊 Raw data structure:', {
+      hasStudents: !!data.students,
+      hasData: !!data.data,
+      studentsLength: data.students?.length || 0,
+      dataLength: data.data?.length || 0,
+      keys: Object.keys(data)
+    });
 
     // Transform the API response to match our interface
-    const transformedStudents: Student[] = (data.students || data.data || []).map((student: any) => ({
-      id: student.id || student.student_id || '',
-      name: student.name || student.full_name || '',
-      email: student.email || '',
-      mobile: student.mobile || student.phone || '',
-      college: student.college || student.college_name || '',
-      status: student.status || StudentStatus.NEW_USER,
-      statusText: getStatusText(student.status || StudentStatus.NEW_USER),
-      appliedDate: student.applied_date || student.created_at || '',
-      scholarship: student.scholarship || student.scholarship_amount || 0,
-      interviewCompleted: student.interview_completed || false,
-      documentsVerified: student.documents_verified || false,
-      statusBar: student.status_bar || [],
-    }));
+    const transformedStudents: Student[] = (data.students || data.data || []).map((student: any) => {
+      // Handle null/undefined values safely
+      const studentId = student.id || student.student_id || null;
+      const studentName = student.name || student.full_name || '';
+      const studentEmail = student.email || '';
+      const studentMobile = student.mobile || student.phone || '';
+      const studentCollege = student.college || student.college_name || '';
+      const studentStatus = student.status || StudentStatus.NEW_USER;
+      const studentScholarship = student.scholarship || student.scholarship_amount || 0;
+      const studentAppliedDate = student.applied_date || student.created_at || '';
+      const studentInterviewCompleted = student.interview_completed || false;
+      const studentDocumentsVerified = student.documents_verified || false;
+      const studentStatusBar = student.status_bar || [];
 
-    // If no data returned, provide fallback data for development
-    if (transformedStudents.length === 0 && process.env.NODE_ENV === 'development') {
-      console.log('No students returned from API, using fallback data for development');
-      const fallbackStudents: Student[] = [
-        {
-          id: "LBFS001",
-          name: "Priya Sharma",
-          email: "priya@email.com",
-          mobile: "9876543201",
-          college: "ABC Engineering",
-          status: StudentStatus.NEW_USER,
-          statusText: getStatusText(StudentStatus.NEW_USER),
-          appliedDate: "2024-01-20",
-          scholarship: 50000,
-          interviewCompleted: false,
-          documentsVerified: false,
-          statusBar: [getStatusText(StudentStatus.NEW_USER)],
-        },
-        {
-          id: "LBFS002",
-          name: "Rahul Kumar",
-          email: "rahul@email.com",
-          mobile: "9876543202",
-          college: "XYZ Medical",
-          status: StudentStatus.MOBILE_VERIFIED,
-          statusText: getStatusText(StudentStatus.MOBILE_VERIFIED),
-          appliedDate: "2024-01-19",
-          scholarship: 0,
-          interviewCompleted: false,
-          documentsVerified: false,
-          statusBar: [getStatusText(StudentStatus.NEW_USER), getStatusText(StudentStatus.MOBILE_VERIFIED)],
-        },
-        {
-          id: "LBFS003",
-          name: "Amit Patel",
-          email: "amit@email.com",
-          mobile: "9876543203",
-          college: "DEF Business School",
-          status: StudentStatus.PROFILE_UPDATED,
-          statusText: getStatusText(StudentStatus.PROFILE_UPDATED),
-          appliedDate: "2024-01-18",
-          scholarship: 100000,
-          interviewCompleted: false,
-          documentsVerified: false,
-          statusBar: [getStatusText(StudentStatus.NEW_USER), getStatusText(StudentStatus.MOBILE_VERIFIED), getStatusText(StudentStatus.PROFILE_UPDATED)],
-        },
-      ];
       return {
-        success: true,
-        students: fallbackStudents,
-        total: fallbackStudents.length,
-        offset: params.offset,
-        limit: params.limit,
+        id: studentId,
+        name: studentName,
+        email: studentEmail,
+        mobile: studentMobile,
+        college: studentCollege,
+        status: studentStatus,
+        statusText: getStatusText(studentStatus),
+        appliedDate: studentAppliedDate,
+        scholarship: studentScholarship,
+        interviewCompleted: studentInterviewCompleted,
+        documentsVerified: studentDocumentsVerified,
+        statusBar: studentStatusBar,
       };
+    });
+
+    // If no data returned, log the response for debugging
+    if (transformedStudents.length === 0) {
+      console.log('⚠️ No students returned from API for status:', params.status);
+      console.log('📊 API Response keys:', Object.keys(data));
+      console.log('📊 API Response data:', data);
     }
+
+    console.log('✅ Transformed students count:', transformedStudents.length);
+    console.log('📊 Response metadata:', {
+      total: data.total,
+      count: data.count,
+      success: data.success,
+      message: data.message
+    });
 
     return {
       success: true,

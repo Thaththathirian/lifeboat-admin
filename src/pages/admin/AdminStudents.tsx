@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, UserCheck, Ban, LogIn, ArrowUp, ArrowDown, Filter, Info, CheckCircle, XCircle, Square, CheckSquare, Loader2 } from "lucide-react";
+import { Eye, UserCheck, Ban, LogIn, ArrowUp, ArrowDown, Filter, Info, CheckCircle, XCircle, Square, CheckSquare, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Student, StudentStatus } from "@/types/student";
 import { fetchStudents, updateStudentStatus, blockStudent, getStatusColor, getStatusText } from "@/utils/studentService";
 
@@ -86,6 +86,10 @@ export default function AdminStudents({ initialTab = "all" }) {
   
   // Ref to prevent multiple API calls
   const hasLoadedRef = useRef(false);
+  
+  // Status grid state
+  const [isStatusGridExpanded, setIsStatusGridExpanded] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<StudentStatus | null>(null);
 
   // Fetch students from API - only call once on component mount
   useEffect(() => {
@@ -145,6 +149,45 @@ export default function AdminStudents({ initialTab = "all" }) {
     loadStudents();
   }, []); // Empty dependency array - only call once on mount
 
+  // Load students by status
+  const loadStudentsByStatus = async (status: StudentStatus | null) => {
+    console.log('🔄 Loading students for status:', status);
+    setLoading(true);
+    setError(null);
+    setCurrentStatus(status);
+    
+    try {
+      const response = await fetchStudents({
+        offset: 0,
+        limit: 5,
+        status: status,
+        search: undefined,
+      });
+      
+      if (response.success) {
+        setStudents(response.students);
+        setTotal(response.total);
+        console.log('✅ Successfully loaded students for status:', status, 'Count:', response.students.length);
+      } else {
+        setError(response.error || 'Failed to fetch students');
+        setStudents([]);
+        console.error('❌ Failed to load students for status:', status, response.error);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch students');
+      setStudents([]);
+      console.error('💥 Exception loading students for status:', status, err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle status selection
+  const handleStatusSelect = (status: StudentStatus | null) => {
+    setIsStatusGridExpanded(false);
+    loadStudentsByStatus(status);
+  };
+
   // Helper function to map tab to status
   const getTabStatus = (tab: string): StudentStatus | null => {
     switch (tab) {
@@ -167,15 +210,22 @@ export default function AdminStudents({ initialTab = "all" }) {
   };
 
   // Filter and sort students
-  let filtered = students.filter(s =>
-    (tab === "all" || s.status === getTabStatus(tab)) &&
-    (s.name.toLowerCase().includes(filter.toLowerCase()) || 
-     s.id.toLowerCase().includes(filter.toLowerCase()) || 
-     s.college.toLowerCase().includes(filter.toLowerCase()))
-  );
+  let filtered = students.filter(s => {
+    // Use currentStatus if set (from status grid), otherwise use tab-based filtering
+    const statusFilter = currentStatus !== null ? s.status === currentStatus : (tab === "all" || s.status === getTabStatus(tab));
+    
+    return statusFilter &&
+      (s.name.toLowerCase().includes(filter.toLowerCase()) || 
+       (s.id && s.id.toLowerCase().includes(filter.toLowerCase())) || 
+       s.college.toLowerCase().includes(filter.toLowerCase()));
+  });
 
   filtered = filtered.sort((a, b) => {
-    if (sortBy === "id") return sortDir === "asc" ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
+    if (sortBy === "id") {
+      const aId = a.id || '';
+      const bId = b.id || '';
+      return sortDir === "asc" ? aId.localeCompare(bId) : bId.localeCompare(aId);
+    }
     if (sortBy === "name") return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
     if (sortBy === "status") return sortDir === "asc" ? a.status - b.status : b.status - a.status;
     if (sortBy === "college") return sortDir === "asc" ? a.college.localeCompare(b.college) : b.college.localeCompare(a.college);
@@ -202,7 +252,7 @@ export default function AdminStudents({ initialTab = "all" }) {
       
       if (result.success) {
         if (newStatus === StudentStatus.PAYMENT_COMPLETED) {
-          const transactionId = generateTransactionId();
+      const transactionId = generateTransactionId();
           console.log(`Transaction ID generated for student ${selectedStudent.id}: ${transactionId}`);
           alert(`Status updated to Payment Completed. Transaction ID: ${transactionId}`);
         } else {
@@ -264,14 +314,14 @@ export default function AdminStudents({ initialTab = "all" }) {
         if (result.success) {
           successCount++;
           if (bulkStatus === StudentStatus.PAYMENT_COMPLETED) {
-            const transactionId = generateTransactionId();
+        const transactionId = generateTransactionId();
             transactionIds.push(transactionId);
           }
         }
       }
       
       if (bulkStatus === StudentStatus.PAYMENT_COMPLETED && transactionIds.length > 0) {
-        console.log("Bulk transaction IDs generated:", transactionIds);
+      console.log("Bulk transaction IDs generated:", transactionIds);
         alert(`Bulk status updated to Payment Completed. ${transactionIds.length} transaction IDs generated.`);
       } else {
         alert(`Bulk status updated to ${getStatusText(bulkStatus)}. ${successCount} students updated.`);
@@ -303,6 +353,14 @@ export default function AdminStudents({ initialTab = "all" }) {
     if (allSelected) setSelected([]);
     else setSelected(filtered.map(s => s.id));
   };
+  // Calculate student counts for each status
+  const getStudentCountByStatus = (status: StudentStatus | null): number => {
+    if (status === null) {
+      return students.length; // All students
+    }
+    return students.filter(student => student.status === status).length;
+  };
+
   // For bulk, only show statuses allowed for all selected students
   const validBulkStatuses = selected.length > 0
     ? allStatuses.filter(status =>
@@ -314,65 +372,125 @@ export default function AdminStudents({ initialTab = "all" }) {
     <div className="main-content-container">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <h2 className="text-2xl font-bold">Student Management</h2>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={() => {
-            console.log('🔄 Manual refresh triggered');
-            setLoading(true);
-            fetchStudents({ offset: 0, limit: 5 }).then(response => {
-              if (response.success) {
-                setStudents(response.students);
-                setTotal(response.total);
-                setError(null);
-                console.log('✅ Manual refresh successful');
-              } else {
-                setError(response.error || 'Failed to refresh students');
-                console.error('❌ Manual refresh failed:', response.error);
-              }
-              setLoading(false);
-            }).catch(err => {
-              setError(err instanceof Error ? err.message : 'Failed to refresh students');
-              console.error('💥 Manual refresh exception:', err);
-              setLoading(false);
-            });
-          }}>
+        <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              console.log('🔄 Manual refresh triggered');
+              loadStudentsByStatus(currentStatus);
+            }}
+            className="w-full sm:w-auto"
+          >
             <Loader2 className="inline h-4 w-4 mr-2" />Refresh
           </Button>
-          <Button variant="outline">Download List</Button>
-          <Button variant="default" disabled={selected.length === 0} onClick={() => setBulkStatusModal(true)}>
+          <Button variant="outline" className="w-full sm:w-auto">Download List</Button>
+          <Button 
+            variant="default" 
+            disabled={selected.length === 0} 
+            onClick={() => setBulkStatusModal(true)}
+            className="w-full sm:w-auto"
+          >
             <UserCheck className="inline h-4 w-4 mr-2" />Bulk Status Change
           </Button>
         </div>
       </div>
-      <Tabs value={tab} onValueChange={setTab} className="mb-4">
-        <TabsList className="grid w-full grid-cols-8 lg:grid-cols-16 gap-1">
-          <TabsTrigger value="all" className="text-xs">All Students</TabsTrigger>
-          <TabsTrigger value="new_user" className="text-xs">New User</TabsTrigger>
-          <TabsTrigger value="mobile_verified" className="text-xs">Mobile Verified</TabsTrigger>
-          <TabsTrigger value="profile_updated" className="text-xs">Profile Updated</TabsTrigger>
-          <TabsTrigger value="profile_approved" className="text-xs">Profile Approved</TabsTrigger>
-          <TabsTrigger value="interview_scheduled" className="text-xs">Interview Scheduled</TabsTrigger>
-          <TabsTrigger value="document_uploaded" className="text-xs">Document Uploaded</TabsTrigger>
-          <TabsTrigger value="waiting_for_payment" className="text-xs">Waiting for Payment</TabsTrigger>
-          <TabsTrigger value="payment_completed" className="text-xs">Payment Completed</TabsTrigger>
-          <TabsTrigger value="payment_verified" className="text-xs">Payment Verified</TabsTrigger>
-          <TabsTrigger value="receipt_verified" className="text-xs">Receipt Verified</TabsTrigger>
-          <TabsTrigger value="certificate_uploaded" className="text-xs">Certificate Uploaded</TabsTrigger>
-          <TabsTrigger value="next_semester" className="text-xs">Next Semester</TabsTrigger>
-          <TabsTrigger value="alumni" className="text-xs">Alumni</TabsTrigger>
-          <TabsTrigger value="blocked" className="text-xs">Blocked</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 w-full items-center">
+      {/* Status Selection */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">Student Status Filter</h3>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsStatusGridExpanded(!isStatusGridExpanded)}
+            className="flex items-center gap-2"
+          >
+            {isStatusGridExpanded ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Hide Status Grid
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Show Status Grid
+              </>
+            )}
+          </Button>
+        </div>
+        
+        {/* Current Status Display */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm text-gray-600">Current Status:</span>
+          {currentStatus !== null ? (
+            <Badge className={getStatusColor(currentStatus)}>
+              {getStatusText(currentStatus)}
+            </Badge>
+          ) : (
+            <Badge className="bg-blue-100 text-blue-800">All Students</Badge>
+          )}
+          {currentStatus !== null && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => handleStatusSelect(null)}
+              className="text-xs"
+            >
+              Clear Filter
+            </Button>
+          )}
+        </div>
+        
+        {/* Expandable Status Grid */}
+        {isStatusGridExpanded && (
+          <div className="bg-gray-50 rounded-lg p-4 border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+              {/* All Students */}
+              <Button
+                variant="outline"
+                className={`h-24 sm:h-20 flex flex-col items-center justify-center gap-1 text-xs ${
+                  currentStatus === null ? 'bg-blue-50 border-blue-300' : ''
+                }`}
+                onClick={() => handleStatusSelect(null)}
+              >
+                <div className="text-lg font-bold">All</div>
+                <div className="text-xs text-gray-600">Students</div>
+                <div className="text-sm font-semibold text-blue-600">
+                  {getStudentCountByStatus(null)}
+                </div>
+              </Button>
+              
+              {/* Status Grid Items */}
+              {allStatuses.map((status) => (
+                <Button
+                  key={status}
+                  variant="outline"
+                  className={`h-24 sm:h-20 flex flex-col items-center justify-center gap-1 text-xs ${
+                    currentStatus === status ? 'bg-blue-50 border-blue-300' : ''
+                  }`}
+                  onClick={() => handleStatusSelect(status)}
+                >
+                  <div className={`w-3 h-3 rounded-full ${getStatusColor(status).split(' ')[0]}`}></div>
+                  <div className="font-medium text-center leading-tight">{getStatusText(status)}</div>
+                  <div className="text-sm font-semibold text-gray-600">
+                    {getStudentCountByStatus(status)}
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col sm:flex-row gap-3 mb-4 w-full items-start sm:items-center">
         <Input
-          className="max-w-xs"
+          className="w-full sm:max-w-xs"
           placeholder="Filter by name, ID, or college..."
           value={filter}
           onChange={e => setFilter(e.target.value)}
         />
-        <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-gray-400" />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="h-5 w-5 text-gray-400 flex-shrink-0" />
           <select
-            className="border rounded px-3 py-2 text-sm bg-white"
+            className="border rounded px-3 py-2 text-sm bg-white w-full sm:w-auto"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value ? Number(e.target.value) as StudentStatus : "")}
           >
@@ -383,7 +501,7 @@ export default function AdminStudents({ initialTab = "all" }) {
           </select>
         </div>
       </div>
-      <Card className="shadow-soft overflow-x-auto">
+      <Card className="shadow-soft">
         <CardHeader>
           <CardTitle>
             {loading ? (
@@ -392,16 +510,21 @@ export default function AdminStudents({ initialTab = "all" }) {
                 Loading Students...
               </div>
             ) : (
-              `${tab === "all" ? "All" : getStatusText(getTabStatus(tab) || StudentStatus.NEW_USER)} Students (${filtered.length})`
+              `${currentStatus !== null ? getStatusText(currentStatus) : "All"} Students (${filtered.length})`
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-700">{error}</p>
+              <p className="text-red-700">
+                {error.includes('Cannot read properties of null') || error.includes('toString') 
+                  ? 'Unable to load student data. Please try refreshing the page.' 
+                  : error}
+              </p>
             </div>
           )}
+          <div className="overflow-x-auto">
           <Table className="min-w-[700px]">
             <TableHeader>
               <TableRow>
@@ -417,34 +540,111 @@ export default function AdminStudents({ initialTab = "all" }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(student => (
-                <TableRow key={student.id} className="hover:bg-gray-50">
-                  <TableCell className="w-8">
-                    <Button size="icon" variant="ghost" onClick={() => toggleSelect(student.id)} title={selected.includes(student.id) ? 'Deselect' : 'Select'}>
-                      {selected.includes(student.id) ? <CheckSquare className="h-5 w-5 text-blue-600 mx-auto" /> : <Square className="h-5 w-5 text-gray-400 mx-auto" />}
-                    </Button>
-                  </TableCell>
-                  <TableCell>{student.id}</TableCell>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(student.status)}`}>
-                      {getStatusText(student.status)}
-                    </span>
-                  </TableCell>
-                  <TableCell>{student.college}</TableCell>
-                  <TableCell>₹{student.scholarship.toLocaleString()}</TableCell>
-                  <TableCell className="align-middle">
-                    <div className="flex flex-row gap-1 justify-center items-center">
-                      <Button size="icon" variant="ghost" title="View" onClick={() => setOpenStudent(student)}><Eye className="h-4 w-4 text-blue-600" /></Button>
-                      <Button size="icon" variant="ghost" title="Change Status" onClick={() => { setSelectedStudent(student); setStatusModal(true); setNewStatus(student.status); }}><UserCheck className="h-4 w-4 text-green-600" /></Button>
-                      <Button size="icon" variant="ghost" title="Block" onClick={() => { setSelectedStudent(student); setBlockModal(true); }}><Ban className="h-4 w-4 text-red-600" /></Button>
-                      <Button size="icon" variant="ghost" title="Login as User" onClick={() => {}}><LogIn className="h-4 w-4 text-gray-600" /></Button>
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <div className="text-gray-400 text-lg font-medium">
+                        {loading ? 'Loading students...' : 'No students found'}
+                      </div>
+                      {!loading && (
+                        <div className="text-gray-500 text-sm">
+                          {error ? error : 'Try adjusting your filters or check back later.'}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filtered.map(student => {
+                  // Generate a unique key for students without ID
+                  const uniqueKey = student.id || `temp-${student.email}-${student.mobile}`;
+                  const hasStudentId = student.id && student.id !== '';
+                  
+                  return (
+                    <TableRow key={uniqueKey} className="hover:bg-gray-50">
+                      <TableCell className="w-8">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => toggleSelect(uniqueKey)} 
+                          title={selected.includes(uniqueKey) ? 'Deselect' : 'Select'}
+                          disabled={!hasStudentId}
+                        >
+                          {selected.includes(uniqueKey) ? <CheckSquare className="h-5 w-5 text-blue-600 mx-auto" /> : <Square className="h-5 w-5 text-gray-400 mx-auto" />}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        {hasStudentId ? (
+                          <span className="font-mono text-sm">{student.id}</span>
+                        ) : (
+                          <span className="text-gray-400 italic text-sm">Pending ID</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{student.name || 'N/A'}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(student.status)}`}>
+                          {getStatusText(student.status)}
+                        </span>
+                      </TableCell>
+                      <TableCell>{student.college || 'N/A'}</TableCell>
+                      <TableCell>₹{(student.scholarship || 0).toLocaleString()}</TableCell>
+                      <TableCell className="align-middle">
+                        <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            title="View" 
+                            onClick={() => setOpenStudent(student)}
+                            className="h-8 w-8"
+                          >
+                            <Eye className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            title="Change Status" 
+                            onClick={() => { 
+                              setSelectedStudent(student); 
+                              setStatusModal(true); 
+                              setNewStatus(student.status); 
+                            }}
+                            className="h-8 w-8"
+                          >
+                            <UserCheck className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            title="Block" 
+                            onClick={() => { 
+                              setSelectedStudent(student); 
+                              setBlockModal(true); 
+                            }}
+                            className="h-8 w-8"
+                          >
+                            <Ban className="h-4 w-4 text-red-600" />
+                          </Button>
+                          {hasStudentId && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              title="Login as User" 
+                              onClick={() => {}}
+                              className="h-8 w-8"
+                            >
+                              <LogIn className="h-4 w-4 text-gray-600" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
       {/* Student Details Modal */}
@@ -453,7 +653,9 @@ export default function AdminStudents({ initialTab = "all" }) {
           {openStudent && (
             <>
               <DialogHeader>
-                <DialogTitle>{openStudent.name} ({openStudent.id})</DialogTitle>
+                <DialogTitle>
+                  {openStudent.name} ({openStudent.id || 'Pending ID'})
+                </DialogTitle>
               </DialogHeader>
               <div className="mb-2"><b>Email:</b> {openStudent.email}</div>
               <div className="mb-2"><b>Mobile:</b> {openStudent.mobile}</div>
@@ -475,7 +677,9 @@ export default function AdminStudents({ initialTab = "all" }) {
           {selectedStudent && (
             <>
               <DialogHeader>
-                <DialogTitle>Change Status for {selectedStudent.name} ({selectedStudent.id})</DialogTitle>
+                <DialogTitle>
+                  Change Status for {selectedStudent.name} ({selectedStudent.id || 'Pending ID'})
+                </DialogTitle>
               </DialogHeader>
               <div className="mb-4 flex items-center gap-2 text-red-600"><Info className="h-4 w-4" /> Warning: This action will be logged with your admin ID (ADM001).</div>
               <select className="w-full border rounded p-2 mb-4" value={newStatus} onChange={e => setNewStatus(Number(e.target.value) as StudentStatus)}>

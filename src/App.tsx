@@ -190,6 +190,7 @@ function App() {
 
   const handleNavigate = (path: string) => {
     setCurrentPath(path)
+    navigate(path)
   }
 
   const handleLogout = () => {
@@ -252,6 +253,12 @@ function App() {
             >
               <AdminNotifications />
             </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students" element={
+          <ProtectedAdminRoute>
+            <Navigate to="/admin/students/all" replace />
           </ProtectedAdminRoute>
         } />
         
