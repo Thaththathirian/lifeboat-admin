@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Users, MessageSquare, Gift } from "lucide-react";
+import { MapPin, Users, MessageSquare, Gift, ArrowUp, ArrowDown } from "lucide-react";
 
 const mockDonors = [
   { id: "DON001", name: "John Doe", occupation: "Businessman", totalDonated: 100000, lastDonation: "2024-01-10", donationType: "Monthly", autoDebit: true, activeStudents: 2 },
@@ -25,10 +25,34 @@ const mockDonors = [
 export default function AdminDonors() {
   const [filter, setFilter] = useState("");
   const [openDonor, setOpenDonor] = useState(null);
+  const [sortBy, setSortBy] = useState('');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-  const filtered = mockDonors.filter(d =>
+  const handleSort = (col: string) => {
+    if (sortBy === col) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(col);
+      setSortDir('asc');
+    }
+  };
+
+  let filtered = mockDonors.filter(d =>
     d.name.toLowerCase().includes(filter.toLowerCase()) || d.id.toLowerCase().includes(filter.toLowerCase())
   );
+
+  // Apply sorting
+  if (sortBy) {
+    filtered = [...filtered].sort((a, b) => {
+      let aVal = a[sortBy];
+      let bVal = b[sortBy];
+      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
 
   return (
     <div className="main-content-container">
@@ -50,14 +74,14 @@ export default function AdminDonors() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Donor ID</TableHead>
-                <TableHead className="text-center">Name</TableHead>
-                <TableHead className="text-center">Occupation</TableHead>
-                <TableHead className="text-center">Total Donated</TableHead>
-                <TableHead className="text-center">Last Donation</TableHead>
-                <TableHead className="text-center">Donation Type</TableHead>
-                <TableHead className="text-center">Auto Debit</TableHead>
-                <TableHead className="text-center">Active Students</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('id')}>Donor ID {sortBy === 'id' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('name')}>Name {sortBy === 'name' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('occupation')}>Occupation {sortBy === 'occupation' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('totalDonated')}>Total Donated {sortBy === 'totalDonated' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('lastDonation')}>Last Donation {sortBy === 'lastDonation' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('donationType')}>Donation Type {sortBy === 'donationType' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('autoDebit')}>Auto Debit {sortBy === 'autoDebit' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('activeStudents')}>Active Students {sortBy === 'activeStudents' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>

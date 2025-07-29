@@ -21,7 +21,9 @@ import {
   MapPin,
   Users,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { collegeColors } from '@/styles/college-colors';
 import { 
@@ -39,6 +41,8 @@ export default function AdminColleges() {
   const [searchUnverified, setSearchUnverified] = useState('');
   const [selectedCollege, setSelectedCollege] = useState<any>(null);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   
   // API data states
   const [verifiedColleges, setVerifiedColleges] = useState<College[]>([]);
@@ -220,6 +224,29 @@ export default function AdminColleges() {
     setUnverifiedOffset(newOffset);
   };
 
+  const handleSort = (col: string) => {
+    if (sortBy === col) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(col);
+      setSortDir('asc');
+    }
+  };
+
+  // Apply sorting to verified colleges
+  let sortedVerified = [...filteredVerified];
+  if (sortBy) {
+    sortedVerified = sortedVerified.sort((a, b) => {
+      let aVal = a[sortBy];
+      let bVal = b[sortBy];
+      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
   return (
     <div className="main-content-container">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
@@ -270,10 +297,10 @@ export default function AdminColleges() {
             <Table>
                              <TableHeader>
                  <TableRow className={collegeColors.table.header}>
-                   <TableHead className="text-center">College Name</TableHead>
-                   <TableHead className="text-center">Contact Person</TableHead>
-                   <TableHead className="text-center">Phone</TableHead>
-                   <TableHead className="text-center">Students</TableHead>
+                   <TableHead className="text-center cursor-pointer" onClick={() => handleSort('name')}>College Name {sortBy === 'name' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                   <TableHead className="text-center cursor-pointer" onClick={() => handleSort('representative_name')}>Contact Person {sortBy === 'representative_name' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                   <TableHead className="text-center cursor-pointer" onClick={() => handleSort('representative_mobile')}>Phone {sortBy === 'representative_mobile' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                   <TableHead className="text-center cursor-pointer" onClick={() => handleSort('activeStudents')}>Students {sortBy === 'activeStudents' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                    <TableHead className="text-center">Actions</TableHead>
                  </TableRow>
                </TableHeader>
@@ -287,14 +314,14 @@ export default function AdminColleges() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : filteredVerified.length === 0 ? (
+                ) : sortedVerified.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                       {errorVerified ? 'Failed to load colleges' : 'No verified colleges found'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredVerified.map((college) => (
+                  sortedVerified.map((college) => (
                     <TableRow key={college.id} className={collegeColors.table.row}>
                                              <TableCell className="text-center">
                          <div className="font-medium">{college.name}</div>
