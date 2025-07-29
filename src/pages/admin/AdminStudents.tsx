@@ -83,6 +83,7 @@ export default function AdminStudents({ initialTab = "all" }) {
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [limit] = useState(10);
+  const [status_counts, setStatusCounts] = useState<Record<string, number>>({});
   
   // Ref to prevent multiple API calls
   const hasLoadedRef = useRef(false);
@@ -131,6 +132,7 @@ export default function AdminStudents({ initialTab = "all" }) {
           console.log('✅ Successfully loaded students:', response.students.length);
           setStudents(response.students);
           setTotal(response.total);
+          setStatusCounts(response.status_counts);
         } else {
           console.error('❌ API returned error:', response.error);
           setError(response.error || 'Failed to fetch students');
@@ -167,6 +169,7 @@ export default function AdminStudents({ initialTab = "all" }) {
       if (response.success) {
         setStudents(response.students);
         setTotal(response.total);
+        setStatusCounts(response.status_counts || {});
         console.log('✅ Successfully loaded students for status:', status, 'Count:', response.students.length);
       } else {
         setError(response.error || 'Failed to fetch students');
@@ -353,12 +356,41 @@ export default function AdminStudents({ initialTab = "all" }) {
     if (allSelected) setSelected([]);
     else setSelected(filtered.map(s => s.id));
   };
-  // Calculate student counts for each status
+  // Calculate student counts for each status using API data
   const getStudentCountByStatus = (status: StudentStatus | null): number => {
     if (status === null) {
       return students.length; // All students
     }
+    
+    // Use status_counts from API if available
+    if (status_counts && Object.keys(status_counts).length > 0) {
+      const statusKey = getStatusKey(status);
+      return status_counts[statusKey] || 0;
+    }
+    
+    // Fallback to calculating from students array
     return students.filter(student => student.status === status).length;
+  };
+
+  // Helper function to convert StudentStatus enum to API status key
+  const getStatusKey = (status: StudentStatus): string => {
+    const statusMap: Record<StudentStatus, string> = {
+      [StudentStatus.NEW_USER]: 'new_user',
+      [StudentStatus.MOBILE_VERIFIED]: 'mobile_verified',
+      [StudentStatus.PROFILE_UPDATED]: 'profile_updated',
+      [StudentStatus.PROFILE_APPROVED]: 'profile_approved',
+      [StudentStatus.INTERVIEW_SCHEDULED]: 'interview_scheduled',
+      [StudentStatus.DOCUMENT_UPLOADED]: 'document_uploaded',
+      [StudentStatus.WAITING_FOR_PAYMENT]: 'waiting_for_payment',
+      [StudentStatus.PAYMENT_COMPLETED]: 'payment_completed',
+      [StudentStatus.PAYMENT_VERIFIED]: 'payment_verified',
+      [StudentStatus.RECEIPT_VERIFIED]: 'receipt_verified',
+      [StudentStatus.CERTIFICATE_UPLOADED]: 'certificate_uploaded',
+      [StudentStatus.NEXT_SEMESTER]: 'next_semester',
+      [StudentStatus.ALUMNI]: 'alumni',
+      [StudentStatus.BLOCKED]: 'blocked',
+    };
+    return statusMap[status] || 'unknown';
   };
 
   // For bulk, only show statuses allowed for all selected students
@@ -683,7 +715,7 @@ export default function AdminStudents({ initialTab = "all" }) {
               </DialogHeader>
               <div className="mb-4 flex items-center gap-2 text-red-600"><Info className="h-4 w-4" /> Warning: This action will be logged with your admin ID (ADM001).</div>
               <select className="w-full border rounded p-2 mb-4" value={newStatus} onChange={e => setNewStatus(Number(e.target.value) as StudentStatus)}>
-                {getValidNextStatuses(selectedStudent).map(status => (
+                {allStatuses.map(status => (
                   <option key={status} value={status} className={getStatusColor(status)}>{getStatusText(status)}</option>
                 ))}
               </select>
@@ -702,7 +734,7 @@ export default function AdminStudents({ initialTab = "all" }) {
               </DialogHeader>
               <div className="mb-4 flex items-center gap-2 text-red-600"><Info className="h-4 w-4" /> Warning: This action will be logged with your admin ID (ADM001).</div>
               <select className="w-full border rounded p-2 mb-4" value={bulkStatus} onChange={e => setBulkStatus(Number(e.target.value) as StudentStatus)}>
-                {validBulkStatuses.map(status => (
+                {allStatuses.map(status => (
                   <option key={status} value={status} className={getStatusColor(status)}>{getStatusText(status)}</option>
                 ))}
               </select>

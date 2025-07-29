@@ -105,7 +105,6 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
     
     // For development, if no auth token, try without it
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
     
@@ -155,7 +154,14 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
     });
 
     // Transform the API response to match our interface
-    const transformedStudents: Student[] = (data.students || data.data || []).map((student: any) => {
+    // The students are nested under data.data.students according to the API response
+    const studentsArray = data.data?.students || data.students || data.data || [];
+    console.log('🔍 Students array from API:', studentsArray);
+    console.log('🔍 Students array type:', typeof studentsArray);
+    console.log('🔍 Students array length:', studentsArray.length);
+    
+    const transformedStudents: Student[] = studentsArray.map((student: any) => {
+      console.log('🔍 Processing student:', student);
       // Handle null/undefined values safely
       const studentId = student.id || student.student_id || null;
       
@@ -174,14 +180,15 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
       const studentEmail = student.email || '';
       const studentMobile = student.mobile || student.phone || '';
       const studentCollege = student.college || student.college_name || '';
-      const studentStatus = student.status || StudentStatus.NEW_USER;
+      // Convert string status to StudentStatus enum
+      const studentStatus = typeof student.status === 'string' ? parseInt(student.status) as StudentStatus : (student.status || StudentStatus.NEW_USER);
       const studentScholarship = student.scholarship || student.scholarship_amount || 0;
       const studentAppliedDate = student.applied_date || student.created_at || '';
       const studentInterviewCompleted = student.interview_completed || false;
       const studentDocumentsVerified = student.documents_verified || false;
       const studentStatusBar = student.status_bar || [];
 
-      return {
+      const transformedStudent = {
         id: studentId,
         name: studentName,
         email: studentEmail,
@@ -195,6 +202,9 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
         documentsVerified: studentDocumentsVerified,
         statusBar: studentStatusBar,
       };
+      
+      console.log('✅ Transformed student:', transformedStudent);
+      return transformedStudent;
     });
 
     // If no data returned, log the response for debugging
@@ -218,6 +228,7 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
       total: data.total || data.count || transformedStudents.length,
       offset: params.offset,
       limit: params.limit,
+      status_counts: data.data?.status_counts || data.status_counts,
     };
   } catch (error) {
     console.error('Failed to fetch students:', error);
@@ -240,7 +251,6 @@ export const updateStudentStatus = async (studentId: string, newStatus: StudentS
     // Get authentication token
     const authToken = getAuthToken();
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
     
@@ -250,13 +260,15 @@ export const updateStudentStatus = async (studentId: string, newStatus: StudentS
       console.warn('⚠️ No auth token found for status update');
     }
     
+    // Create FormData for key-value pair format
+    const formData = new FormData();
+    formData.append('student_id', studentId);
+    formData.append('status', newStatus.toString());
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        student_id: studentId,
-        status: newStatus,
-      }),
+      body: formData,
     });
 
     if (!response.ok) {
@@ -285,7 +297,6 @@ export const blockStudent = async (studentId: string): Promise<{ success: boolea
     // Get authentication token
     const authToken = getAuthToken();
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
     
@@ -295,12 +306,14 @@ export const blockStudent = async (studentId: string): Promise<{ success: boolea
       console.warn('⚠️ No auth token found for block student');
     }
     
+    // Create FormData for key-value pair format
+    const formData = new FormData();
+    formData.append('student_id', studentId);
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        student_id: studentId,
-      }),
+      body: formData,
     });
 
     if (!response.ok) {

@@ -188,10 +188,14 @@ export const approveCollege = async (collegeId: string): Promise<{ success: bool
     const apiUrl = `${getApiBaseUrl()}/Admin/approve_college`;
     console.log('API URL:', apiUrl);
     
+    // Create FormData for key-value pair format
+    const formData = new FormData();
+    formData.append('collegeId', collegeId);
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ collegeId }),
+      body: formData,
     });
 
     if (!response.ok) {
@@ -220,10 +224,17 @@ export const rejectCollege = async (collegeId: string, reason?: string): Promise
     const apiUrl = `${getApiBaseUrl()}/Admin/reject_college`;
     console.log('API URL:', apiUrl);
     
+    // Create FormData for key-value pair format
+    const formData = new FormData();
+    formData.append('collegeId', collegeId);
+    if (reason) {
+      formData.append('reason', reason);
+    }
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ collegeId, reason }),
+      body: formData,
     });
 
     if (!response.ok) {

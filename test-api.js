@@ -13,7 +13,6 @@ async function testStudentAPI() {
     const response1 = await fetch(url, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
     });
@@ -39,7 +38,6 @@ async function testStudentAPI() {
       const response2 = await fetch(url, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${authToken}`,
         },

@@ -46,19 +46,22 @@ export const authenticateWithBackend = async (
     const apiUrl = `${getApiBaseUrl()}/OAuth/Student`;
     console.log('API URL:', apiUrl);
     
+    // Create FormData for key-value pair format
+    const formData = new FormData();
+    formData.append('userData', JSON.stringify(userData));
+    if (recaptchaToken) {
+      formData.append('recaptchaToken', recaptchaToken);
+    }
+    formData.append('tokenType', 'google_jwt');
+    
     // Send JWT token in Authorization header for backend verification
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': `Bearer ${googleToken}`, // Google JWT token for verification
       },
-      body: JSON.stringify({
-        userData: userData, // User data for profile creation
-        recaptchaToken: recaptchaToken, // reCAPTCHA token for security
-        tokenType: 'google_jwt', // Indicate this is a Google JWT token
-      }),
+      body: formData,
     });
 
     console.log('Backend response status:', response.status);
@@ -110,7 +113,6 @@ export const verifySession = async (): Promise<BackendAuthResponse> => {
     const response = await fetch('/api/auth/verify', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
       },
     });
@@ -139,7 +141,6 @@ export const logoutFromBackend = async (): Promise<BackendAuthResponse> => {
     const response = await fetch('/api/auth/logout', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
       },
     });

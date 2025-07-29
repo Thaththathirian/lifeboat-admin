@@ -80,21 +80,23 @@ class OTPService {
       
       // Prepare headers with Firebase bearer token
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
       
       if (idToken) {
         headers['Authorization'] = `Bearer ${idToken}`;
       }
 
+      // Create FormData for key-value pair format
+      const formData = new FormData();
+      formData.append('mobileNumber', mobileNumber);
+      formData.append('otp', otp);
+
       // Call the backend API for OTP verification
       const response = await fetch('http://localhost/lifeboat/Student/verify_mobile', {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          mobileNumber: mobileNumber,
-          otp: otp
-        }),
+        body: formData,
       });
 
       if (!response.ok) {

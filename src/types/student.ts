@@ -37,6 +37,7 @@ export interface StudentsResponse {
   offset: number;
   limit: number;
   error?: string;
+  status_counts?: Record<string, number>;
 }
 
 export interface StudentsRequest {
