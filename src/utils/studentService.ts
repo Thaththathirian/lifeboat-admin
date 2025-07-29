@@ -158,7 +158,19 @@ export const fetchStudents = async (params: StudentsRequest): Promise<StudentsRe
     const transformedStudents: Student[] = (data.students || data.data || []).map((student: any) => {
       // Handle null/undefined values safely
       const studentId = student.id || student.student_id || null;
-      const studentName = student.name || student.full_name || '';
+      
+      // Handle name from first_name and last_name fields
+      let studentName = '';
+      if (student.first_name && student.last_name) {
+        studentName = `${student.first_name} ${student.last_name}`.trim();
+      } else if (student.first_name) {
+        studentName = student.first_name;
+      } else if (student.last_name) {
+        studentName = student.last_name;
+      } else {
+        studentName = student.name || student.full_name || '';
+      }
+      
       const studentEmail = student.email || '';
       const studentMobile = student.mobile || student.phone || '';
       const studentCollege = student.college || student.college_name || '';
