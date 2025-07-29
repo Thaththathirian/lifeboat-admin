@@ -414,6 +414,14 @@ function App() {
           </ProtectedAdminRoute>
         } />
         
+        <Route path="/admin/payments" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminPaymentAllotment />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
         <Route path="/admin/oauth-test" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>

@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/google-firebase-auth/' : '/',
   server: {
     host: "::",
-    port: 8080,
+    port: 8082,
   },
   plugins: [
     react(),

@@ -95,6 +95,11 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
         icon: <Heart className="h-4 w-4" />
       },
       {
+        title: "Payment Allotment",
+        path: "/admin/payments",
+        icon: <CreditCard className="h-4 w-4" />
+      },
+      {
         title: "Messages",
         path: "/admin/messages",
         icon: <MessageSquare className="h-4 w-4" />
