@@ -722,12 +722,6 @@ export default function AdminColleges() {
                         <span>Total Received:</span>
                         <span className="font-medium">₹{selectedCollege.totalReceived?.toLocaleString() || '0'}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Status:</span>
-                        <Badge className={`${collegeColors.verified.bg} ${collegeColors.verified.text}`}>
-                          {selectedCollege.status}
-                        </Badge>
-                      </div>
                     </div>
                   </div>
                 )}

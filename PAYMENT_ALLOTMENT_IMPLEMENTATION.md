@@ -40,7 +40,7 @@ This document describes the implementation of the enhanced payment allotment sys
 - **Feature**: When admin clicks "Allot Payment", selected students' status updates to "Payment Pending"
 - **Implementation**:
   - Creates `PaymentAllotment` records for selected students
-  - Updates student status to `WAITING_FOR_PAYMENT`
+  - Updates student status to `PAYMENT_PENDING`
   - Stores allotment data with college fee, allotted amount, and status
   - Shows confirmation dialog with selected students and amounts
 

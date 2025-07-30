@@ -128,9 +128,9 @@ export default function AdminPaymentAllotment() {
   };
 
   const handleStatusChange = (studentId: string, status: StudentStatus) => {
-    // Only allow PAYMENT_PENDING or ELIGIBLE_FOR_SCHOLARSHIP in payment allotment table
+    // Only allow PAYMENT_PENDING, ELIGIBLE_FOR_SCHOLARSHIP, or PAYMENT_VERIFIED in payment allotment table
     if (!PAYMENT_ALLOTMENT_STATUS_OPTIONS.includes(status as any)) {
-      alert("In payment allotment table, you can only change status to 'Payment Pending' or 'Eligible for Scholarship'.");
+      alert("In payment allotment table, you can only change status to 'Payment Pending', 'Eligible for Scholarship', or 'Payment Verified'.");
       return;
     }
     
@@ -146,9 +146,9 @@ export default function AdminPaymentAllotment() {
       return;
     }
 
-    // Only allow PAYMENT_PENDING or ELIGIBLE_FOR_SCHOLARSHIP in payment allotment table
+    // Only allow PAYMENT_PENDING, ELIGIBLE_FOR_SCHOLARSHIP, or PAYMENT_VERIFIED in payment allotment table
     if (!PAYMENT_ALLOTMENT_STATUS_OPTIONS.includes(status as any)) {
-      alert("In payment allotment table, you can only change status to 'Payment Pending' or 'Eligible for Scholarship'.");
+      alert("In payment allotment table, you can only change status to 'Payment Pending', 'Eligible for Scholarship', or 'Payment Verified'.");
       return;
     }
 
@@ -508,6 +508,7 @@ export default function AdminPaymentAllotment() {
                      <SelectItem value={StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP.toString()}>Eligible for Scholarship</SelectItem>
                      <SelectItem value={StudentStatus.PAYMENT_PENDING.toString()}>Payment Pending</SelectItem>
                      <SelectItem value={StudentStatus.PAID.toString()}>Paid</SelectItem>
+                     <SelectItem value={StudentStatus.PAYMENT_VERIFIED.toString()}>Payment Verified</SelectItem>
                      <SelectItem value={StudentStatus.RECEIPT_DOCUMENTS_SUBMITTED.toString()}>Receipt Documents Submitted</SelectItem>
                      <SelectItem value={StudentStatus.ALUMNI.toString()}>Alumni</SelectItem>
                      <SelectItem value={StudentStatus.BLOCKED.toString()}>Blocked</SelectItem>
@@ -545,6 +546,7 @@ export default function AdminPaymentAllotment() {
                        <SelectContent>
                          <SelectItem value={StudentStatus.PAYMENT_PENDING.toString()}>Payment Pending</SelectItem>
                          <SelectItem value={StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP.toString()}>Eligible for Scholarship</SelectItem>
+                         <SelectItem value={StudentStatus.PAYMENT_VERIFIED.toString()}>Payment Verified</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

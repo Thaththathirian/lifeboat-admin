@@ -12,9 +12,10 @@ export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_SUBMITTED = 7;
 export const STUDENT_STATUS_ELIGIBLE_FOR_SCHOLARSHIP = 8;
 export const STUDENT_STATUS_PAYMENT_PENDING = 9;
 export const STUDENT_STATUS_PAID = 10;
-export const STUDENT_STATUS_RECEIPT_DOCUMENTS_SUBMITTED = 11;
-export const STUDENT_STATUS_ALUMNI = 12;
-export const STUDENT_STATUS_BLOCKED = 13;
+export const STUDENT_STATUS_PAYMENT_VERIFIED = 11;
+export const STUDENT_STATUS_RECEIPT_DOCUMENTS_SUBMITTED = 12;
+export const STUDENT_STATUS_ALUMNI = 13;
+export const STUDENT_STATUS_BLOCKED = 14;
 
 // Status Display Mappings
 export const statusDisplayMap: Record<StudentStatus, string> = {
@@ -29,6 +30,7 @@ export const statusDisplayMap: Record<StudentStatus, string> = {
   [StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP]: "Eligible for Scholarship",
   [StudentStatus.PAYMENT_PENDING]: "Payment Pending",
   [StudentStatus.PAID]: "Paid",
+  [StudentStatus.PAYMENT_VERIFIED]: "Payment Verified",
   [StudentStatus.RECEIPT_DOCUMENTS_SUBMITTED]: "Receipt Documents Submitted",
   [StudentStatus.ALUMNI]: "Alumni",
   [StudentStatus.BLOCKED]: "Blocked",
@@ -47,6 +49,7 @@ export const statusColorMap: Record<StudentStatus, string> = {
   [StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP]: 'bg-blue-100 text-blue-800',
   [StudentStatus.PAYMENT_PENDING]: 'bg-yellow-100 text-yellow-800',
   [StudentStatus.PAID]: 'bg-green-400 text-green-900',
+  [StudentStatus.PAYMENT_VERIFIED]: 'bg-emerald-100 text-emerald-800',
   [StudentStatus.RECEIPT_DOCUMENTS_SUBMITTED]: 'bg-green-400 text-green-900',
   [StudentStatus.ALUMNI]: 'bg-teal-100 text-teal-800',
   [StudentStatus.BLOCKED]: 'bg-red-100 text-red-800',
@@ -65,6 +68,7 @@ export const statusOrder: StudentStatus[] = [
   StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP,
   StudentStatus.PAYMENT_PENDING,
   StudentStatus.PAID,
+  StudentStatus.PAYMENT_VERIFIED,
   StudentStatus.RECEIPT_DOCUMENTS_SUBMITTED,
   StudentStatus.ALUMNI,
   StudentStatus.BLOCKED,
@@ -83,6 +87,7 @@ export const statusApiMap: Record<StudentStatus, string> = {
   [StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP]: 'eligible_for_scholarship',
   [StudentStatus.PAYMENT_PENDING]: 'payment_pending',
   [StudentStatus.PAID]: 'paid',
+  [StudentStatus.PAYMENT_VERIFIED]: 'payment_verified',
   [StudentStatus.RECEIPT_DOCUMENTS_SUBMITTED]: 'receipt_documents_submitted',
   [StudentStatus.ALUMNI]: 'alumni',
   [StudentStatus.BLOCKED]: 'blocked',
@@ -117,6 +122,7 @@ export const getNextStatus = (currentStatus: StudentStatus): StudentStatus | nul
 export const PAYMENT_ALLOTMENT_STATUS_OPTIONS = [
   StudentStatus.PAYMENT_PENDING,
   StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP,
+  StudentStatus.PAYMENT_VERIFIED,
 ] as const;
 
 export type PaymentAllotmentStatusOption = typeof PAYMENT_ALLOTMENT_STATUS_OPTIONS[number]; 
