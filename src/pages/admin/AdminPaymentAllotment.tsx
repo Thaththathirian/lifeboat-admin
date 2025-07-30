@@ -39,9 +39,10 @@ const mockPaymentMappings: PaymentMapping[] = [
 export default function AdminPaymentAllotment() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [studentAmounts, setStudentAmounts] = useState<{[key: string]: number}>({});
+  const [studentAmounts, setStudentAmounts] = useState<{[key: string]: number | string}>({});
   const [studentStatuses, setStudentStatuses] = useState<{[key: string]: StudentStatus}>({});
   const [bulkStatus, setBulkStatus] = useState<StudentStatus | "">("");
   const [selectedDonors, setSelectedDonors] = useState<string[]>([]);
@@ -85,6 +86,7 @@ export default function AdminPaymentAllotment() {
           lastAllottedAmount: Math.floor(Math.random() * 20000) + 10000,
         }));
         setStudents(studentsWithFees);
+        setError(null); // Clear any previous errors
     } else {
         setError(response.error || 'Failed to fetch students');
         setStudents([]);
@@ -110,6 +112,7 @@ export default function AdminPaymentAllotment() {
   };
 
   const handleStudentSelection = (studentId: string) => {
+    if (!studentId) return; // Don't select if no ID
     setSelectedStudents(prev => 
       prev.includes(studentId) 
         ? prev.filter(id => id !== studentId)
@@ -118,6 +121,7 @@ export default function AdminPaymentAllotment() {
   };
 
   const handleAmountChange = (studentId: string, amount: string) => {
+    if (!studentId) return; // Don't update if no ID
     // Allow empty string or valid numbers
     const numericAmount = amount === '' ? '' : parseInt(amount) || 0;
     
@@ -128,6 +132,7 @@ export default function AdminPaymentAllotment() {
   };
 
   const handleStatusChange = (studentId: string, status: StudentStatus) => {
+    if (!studentId) return; // Don't update if no ID
     // Only allow PAYMENT_PENDING, ELIGIBLE_FOR_SCHOLARSHIP, or PAYMENT_VERIFIED in payment allotment table
     if (!PAYMENT_ALLOTMENT_STATUS_OPTIONS.includes(status as any)) {
       alert("In payment allotment table, you can only change status to 'Payment Pending', 'Eligible for Scholarship', or 'Payment Verified'.");
@@ -172,13 +177,15 @@ export default function AdminPaymentAllotment() {
       return;
     }
 
+    setBulkLoading(true);
+
     const allotments: PaymentAllotment[] = [];
     
     for (const studentId of selectedStudents) {
       const student = students.find(s => s.id === studentId);
       if (!student) continue;
 
-      const amount = studentAmounts[studentId] !== undefined && studentAmounts[studentId] !== '' ? studentAmounts[studentId] : (student.lastAllottedAmount || 0);
+      const amount = getStudentAmount(studentId, student.lastAllottedAmount || 0);
       
       const allotment: PaymentAllotment = {
         id: `ALLOC-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
@@ -213,16 +220,19 @@ export default function AdminPaymentAllotment() {
       if (!result.success) {
         console.error('Bulk status update failed:', result.error);
         alert(`Failed to update status for some students: ${result.error}`);
+        return; // Don't proceed with allotment if status update fails
       }
     } catch (error) {
       console.error('Failed to update student statuses:', error);
       alert('Failed to update student statuses. Please try again.');
+      return; // Don't proceed with allotment if status update fails
     }
 
     setPaymentAllotments(prev => [...prev, ...allotments]);
     setSelectedStudents([]);
     setStudentAmounts({});
     setShowAllotmentDialog(false);
+    setBulkLoading(false);
     
     alert(`Payment allotted to ${allotments.length} students. Status updated.`);
   };
@@ -232,6 +242,8 @@ export default function AdminPaymentAllotment() {
       alert("Please select students to update to paid status.");
       return;
     }
+
+    setBulkLoading(true);
 
     const newTransactions: Transaction[] = [];
     
@@ -246,7 +258,7 @@ export default function AdminPaymentAllotment() {
         studentId: studentId,
         studentName: student.name,
         college: student.college,
-        amount: studentAmounts[studentId] !== undefined && studentAmounts[studentId] !== '' ? studentAmounts[studentId] : (student.lastAllottedAmount || 0),
+        amount: getStudentAmount(studentId, student.lastAllottedAmount || 0),
         date: new Date().toISOString().split('T')[0],
         status: 'completed',
       };
@@ -256,7 +268,10 @@ export default function AdminPaymentAllotment() {
              try {
          // Use the status from studentStatuses if set, otherwise default to PAID
          const statusToUpdate = studentStatuses[studentId] || StudentStatus.PAID;
-         await updateStudentStatus(studentId, statusToUpdate);
+         const result = await updateStudentStatus(studentId, statusToUpdate);
+         if (!result.success) {
+           console.error(`Failed to update status for student ${studentId}:`, result.error);
+         }
        } catch (error) {
          console.error(`Failed to update status for student ${studentId}:`, error);
        }
@@ -266,6 +281,7 @@ export default function AdminPaymentAllotment() {
     setSelectedStudents([]);
     setStudentAmounts({});
     setShowPaymentDialog(false);
+    setBulkLoading(false);
     
     alert(`${newTransactions.length} students updated to Paid status. ${newTransactions.length} transaction IDs generated.`);
   };
@@ -416,6 +432,15 @@ export default function AdminPaymentAllotment() {
     return getTotalSelectedDonorAmount() - getTotalSelectedTransactionAmount();
   };
 
+  // Helper function to safely get amount from studentAmounts
+  const getStudentAmount = (studentId: string, fallbackAmount: number = 0): number => {
+    const amount = studentAmounts[studentId];
+    if (amount === undefined || amount === '') {
+      return fallbackAmount;
+    }
+    return typeof amount === 'number' ? amount : parseInt(amount as string) || 0;
+  };
+
   const handleTransactionSelection = (transactionId: string) => {
     setSelectedTransactions(prev => 
       prev.includes(transactionId) 
@@ -536,7 +561,7 @@ export default function AdminPaymentAllotment() {
                    <div className="flex items-center gap-2">
                      <span className="text-sm text-muted-foreground">Bulk Status:</span>
                      <Select value={bulkStatus} onValueChange={(value) => {
-                       if (value) {
+                       if (value && value !== "") {
                          handleBulkStatusChange(Number(value) as StudentStatus);
                        }
                      }}>
@@ -637,7 +662,7 @@ export default function AdminPaymentAllotment() {
                               type="number"
                               placeholder="Amount"
                               className="w-24"
-                              value={studentAmounts[student.id || ''] !== undefined ? studentAmounts[student.id || ''] : (student.lastAllottedAmount || '')}
+                              value={studentAmounts[student.id || ''] !== undefined ? String(studentAmounts[student.id || '']) : String(student.lastAllottedAmount || '')}
                               onChange={(e) => handleAmountChange(student.id || '', e.target.value)}
                               disabled={!selectedStudents.includes(student.id || '')}
                             />
@@ -654,6 +679,7 @@ export default function AdminPaymentAllotment() {
                               <SelectContent>
                                 <SelectItem value={StudentStatus.PAYMENT_PENDING.toString()}>Payment Pending</SelectItem>
                                 <SelectItem value={StudentStatus.ELIGIBLE_FOR_SCHOLARSHIP.toString()}>Eligible for Scholarship</SelectItem>
+                                <SelectItem value={StudentStatus.PAYMENT_VERIFIED.toString()}>Payment Verified</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -668,9 +694,10 @@ export default function AdminPaymentAllotment() {
                 <Button 
                   variant="outline" 
                   onClick={() => setShowAllotmentDialog(true)}
-                  disabled={selectedStudents.length === 0}
+                  disabled={selectedStudents.length === 0 || bulkLoading}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
+                  {bulkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                   Allot Payment
                 </Button>
               </div>
@@ -748,9 +775,10 @@ export default function AdminPaymentAllotment() {
                           <Button 
                             variant="outline" 
                   onClick={() => setShowPaymentDialog(true)}
-                            disabled={selectedStudents.length === 0}
+                            disabled={selectedStudents.length === 0 || bulkLoading}
                           >
                             <CheckCircle className="h-4 w-4 mr-2" />
+                            {bulkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                             Update to Paid
                           </Button>
                   </div>
@@ -1084,7 +1112,7 @@ export default function AdminPaymentAllotment() {
               <h4 className="font-semibold">Selected Students:</h4>
               {selectedStudents.map(studentId => {
                 const student = students.find(s => s.id === studentId);
-                const amount = studentAmounts[studentId] !== undefined && studentAmounts[studentId] !== '' ? studentAmounts[studentId] : (student?.lastAllottedAmount || 0);
+                const amount = getStudentAmount(studentId, student?.lastAllottedAmount || 0);
                 return (
                   <p key={studentId} className="text-sm">
                     {student?.name} - ₹{amount.toLocaleString()}
@@ -1096,7 +1124,8 @@ export default function AdminPaymentAllotment() {
               <Button variant="outline" onClick={() => setShowAllotmentDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAllotPayment}>
+              <Button onClick={handleAllotPayment} disabled={bulkLoading}>
+                {bulkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Confirm Allotment
               </Button>
             </div>
@@ -1126,7 +1155,8 @@ export default function AdminPaymentAllotment() {
               <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateToPaid}>
+              <Button onClick={handleUpdateToPaid} disabled={bulkLoading}>
+                {bulkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Confirm Payment
               </Button>
             </div>
