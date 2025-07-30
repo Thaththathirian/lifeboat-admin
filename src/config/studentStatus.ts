@@ -2,26 +2,24 @@ import { StudentStatus } from '../types/student';
 
 // Student Status Constants
 export const STUDENT_STATUS_NEW_USER = 0;
-export const STUDENT_STATUS_MOBILE_VERIFIED = 1;
-export const STUDENT_STATUS_PROFILE_UPDATED = 2;
-export const STUDENT_STATUS_PERSONAL_DOCUMENTS_PENDING = 3;
-export const STUDENT_STATUS_PERSONAL_DOCUMENTS_SUBMITTED = 4;
-export const STUDENT_STATUS_INTERVIEW_SCHEDULED = 5;
-export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_PENDING = 6;
-export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_SUBMITTED = 7;
-export const STUDENT_STATUS_ELIGIBLE_FOR_SCHOLARSHIP = 8;
-export const STUDENT_STATUS_PAYMENT_PENDING = 9;
-export const STUDENT_STATUS_PAID = 10;
-export const STUDENT_STATUS_PAYMENT_VERIFIED = 11;
-export const STUDENT_STATUS_RECEIPT_DOCUMENTS_SUBMITTED = 12;
-export const STUDENT_STATUS_ALUMNI = 13;
-export const STUDENT_STATUS_BLOCKED = 14;
+export const STUDENT_STATUS_PROFILE_UPDATE_PENDING = 1;
+export const STUDENT_STATUS_PERSONAL_DOCUMENTS_PENDING = 2;
+export const STUDENT_STATUS_PERSONAL_DOCUMENTS_SUBMITTED = 3;
+export const STUDENT_STATUS_INTERVIEW_SCHEDULED = 4;
+export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_PENDING = 5;
+export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_SUBMITTED = 6;
+export const STUDENT_STATUS_ELIGIBLE_FOR_SCHOLARSHIP = 7;
+export const STUDENT_STATUS_PAYMENT_PENDING = 8;
+export const STUDENT_STATUS_PAID = 9;
+export const STUDENT_STATUS_PAYMENT_VERIFIED = 10;
+export const STUDENT_STATUS_RECEIPT_DOCUMENTS_SUBMITTED = 11;
+export const STUDENT_STATUS_ALUMNI = 12;
+export const STUDENT_STATUS_BLOCKED = 13;
 
 // Status Display Mappings
 export const statusDisplayMap: Record<StudentStatus, string> = {
   [StudentStatus.NEW_USER]: "New User",
-  [StudentStatus.MOBILE_VERIFIED]: "Mobile Verified",
-  [StudentStatus.PROFILE_UPDATED]: "Profile Updated",
+  [StudentStatus.PROFILE_UPDATE_PENDING]: "Profile Update Pending",
   [StudentStatus.PERSONAL_DOCUMENTS_PENDING]: "Personal Documents Pending",
   [StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED]: "Personal Documents Submitted",
   [StudentStatus.INTERVIEW_SCHEDULED]: "Interview Scheduled",
@@ -39,8 +37,7 @@ export const statusDisplayMap: Record<StudentStatus, string> = {
 // Status Color Mappings
 export const statusColorMap: Record<StudentStatus, string> = {
   [StudentStatus.NEW_USER]: 'bg-gray-100 text-gray-800',
-  [StudentStatus.MOBILE_VERIFIED]: 'bg-blue-100 text-blue-800',
-  [StudentStatus.PROFILE_UPDATED]: 'bg-yellow-100 text-yellow-800',
+  [StudentStatus.PROFILE_UPDATE_PENDING]: 'bg-blue-100 text-blue-800',
   [StudentStatus.PERSONAL_DOCUMENTS_PENDING]: 'bg-orange-100 text-orange-800',
   [StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED]: 'bg-green-400 text-green-900',
   [StudentStatus.INTERVIEW_SCHEDULED]: 'bg-purple-100 text-purple-800',
@@ -58,8 +55,7 @@ export const statusColorMap: Record<StudentStatus, string> = {
 // Status Order for Workflow
 export const statusOrder: StudentStatus[] = [
   StudentStatus.NEW_USER,
-  StudentStatus.MOBILE_VERIFIED,
-  StudentStatus.PROFILE_UPDATED,
+  StudentStatus.PROFILE_UPDATE_PENDING,
   StudentStatus.PERSONAL_DOCUMENTS_PENDING,
   StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED,
   StudentStatus.INTERVIEW_SCHEDULED,
@@ -77,8 +73,7 @@ export const statusOrder: StudentStatus[] = [
 // API Status Mapping
 export const statusApiMap: Record<StudentStatus, string> = {
   [StudentStatus.NEW_USER]: 'new_user',
-  [StudentStatus.MOBILE_VERIFIED]: 'mobile_verified',
-  [StudentStatus.PROFILE_UPDATED]: 'profile_updated',
+  [StudentStatus.PROFILE_UPDATE_PENDING]: 'profile_update_pending',
   [StudentStatus.PERSONAL_DOCUMENTS_PENDING]: 'personal_documents_pending',
   [StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED]: 'personal_documents_submitted',
   [StudentStatus.INTERVIEW_SCHEDULED]: 'interview_scheduled',

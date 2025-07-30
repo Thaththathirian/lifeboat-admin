@@ -42,7 +42,7 @@ Added console logging to track when status parameters are being added:
 6. **Load all students** → Returns all students without filtering
 
 ### **Individual Status Flow**
-1. **User clicks status** → `handleStatusSelect(StudentStatus.MOBILE_VERIFIED)`
+1. **User clicks status** → `handleStatusSelect(StudentStatus.PROFILE_UPDATE_PENDING)`
 2. **Set current status** → `setCurrentStatus(1)`
 3. **Call API** → `fetchStudents({ status: 1 })`
 4. **Service adds parameter** → Includes status in URL

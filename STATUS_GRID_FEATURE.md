@@ -35,27 +35,26 @@ The new expandable status grid provides an intuitive way to filter students by t
 ```typescript
 enum StudentStatus {
   NEW_USER = 0,
-  MOBILE_VERIFIED = 1,
-  PROFILE_UPDATED = 2,
-  PERSONAL_DOCUMENTS_PENDING = 3,
-  PERSONAL_DOCUMENTS_SUBMITTED = 4,
-  INTERVIEW_SCHEDULED = 5,
-  ACADEMIC_DOCUMENTS_PENDING = 6,
-  ACADEMIC_DOCUMENTS_SUBMITTED = 7,
-  ELIGIBLE_FOR_SCHOLARSHIP = 8,
-  PAYMENT_PENDING = 9,
-  PAID = 10,
-  PAYMENT_VERIFIED = 11,
-  RECEIPT_DOCUMENTS_SUBMITTED = 12,
-  ALUMNI = 13,
-  BLOCKED = 14,
+  PROFILE_UPDATE_PENDING = 1,
+  PERSONAL_DOCUMENTS_PENDING = 2,
+  PERSONAL_DOCUMENTS_SUBMITTED = 3,
+  INTERVIEW_SCHEDULED = 4,
+  ACADEMIC_DOCUMENTS_PENDING = 5,
+  ACADEMIC_DOCUMENTS_SUBMITTED = 6,
+  ELIGIBLE_FOR_SCHOLARSHIP = 7,
+  PAYMENT_PENDING = 8,
+  PAID = 9,
+  PAYMENT_VERIFIED = 10,
+  RECEIPT_DOCUMENTS_SUBMITTED = 11,
+  ALUMNI = 12,
+  BLOCKED = 13,
 }
 ```
 
 ### API Calls
 - **All Students**: `GET /Admin/get_all_students?offset=0&limit=5`
 - **Filtered by Status**: `GET /Admin/get_all_students?offset=0&limit=5&status=1`
-- **Example**: Status 1 (Mobile Verified) = `&status=1`
+- **Example**: Status 1 (Profile Update Pending) = `&status=1`
 
 ## User Flow
 
@@ -147,11 +146,11 @@ const loadStudentsByStatus = async (status: StudentStatus | null) => {
 
 ## Usage Examples
 
-### Filter by Mobile Verified Students
+### Filter by Profile Update Pending Students
 1. Click "Show Status Grid"
-2. Click "Mobile Verified" box
+2. Click "Profile Update Pending" box
 3. API calls: `GET /Admin/get_all_students?offset=0&limit=5&status=1`
-4. Table shows only mobile verified students
+4. Table shows only profile update pending students
 
 ### Filter by Payment Completed
 1. Click "Show Status Grid"
