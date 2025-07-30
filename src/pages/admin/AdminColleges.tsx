@@ -23,7 +23,8 @@ import {
   Loader2,
   AlertCircle,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  LogIn
 } from 'lucide-react';
 import { collegeColors } from '@/styles/college-colors';
 import { 
@@ -180,6 +181,11 @@ export default function AdminColleges() {
     } catch (error) {
       console.error('Error unverifying college:', error);
     }
+  };
+
+  const handleDirectLogin = (collegeId: string) => {
+    // In a real application, this would redirect to college login or generate a login link
+    alert(`Direct login link generated for college ${collegeId}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -351,6 +357,15 @@ export default function AdminColleges() {
                            >
                              <XCircle className="h-4 w-4" />
                            </Button>
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             onClick={() => handleDirectLogin(college.id)}
+                             className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                             title="Direct Login"
+                           >
+                             <LogIn className="h-4 w-4" />
+                           </Button>
                          </div>
                        </TableCell>
                     </TableRow>
@@ -453,6 +468,15 @@ export default function AdminColleges() {
                              title="Reject"
                            >
                              <XCircle className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             onClick={() => handleDirectLogin(college.id)}
+                             className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                             title="Direct Login"
+                           >
+                             <LogIn className="h-4 w-4" />
                            </Button>
                          </div>
                        </TableCell>

@@ -4,27 +4,168 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { MapPin, Users, MessageSquare, Gift, ArrowUp, ArrowDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowUp, ArrowDown, Eye, Users, Ban, Gift, LogIn, AlertTriangle } from "lucide-react";
 
-const mockDonors = [
-  { id: "DON001", name: "John Doe", occupation: "Businessman", totalDonated: 100000, lastDonation: "2024-01-10", donationType: "Monthly", autoDebit: true, activeStudents: 2 },
-  { id: "DON002", name: "Sarah Wilson", occupation: "Doctor", totalDonated: 50000, lastDonation: "2024-01-05", donationType: "Quarterly", autoDebit: false, activeStudents: 1 },
-  { id: "DON003", name: "Amit Patel", occupation: "Engineer", totalDonated: 75000, lastDonation: "2024-02-12", donationType: "One-Time", autoDebit: false, activeStudents: 0 },
-  { id: "DON004", name: "Priya Sharma", occupation: "Teacher", totalDonated: 120000, lastDonation: "2024-03-01", donationType: "Monthly", autoDebit: true, activeStudents: 3 },
-  { id: "DON005", name: "Vikram Singh", occupation: "Lawyer", totalDonated: 30000, lastDonation: "2024-01-20", donationType: "Quarterly", autoDebit: false, activeStudents: 1 },
-  { id: "DON006", name: "Meera Das", occupation: "Artist", totalDonated: 20000, lastDonation: "2024-02-28", donationType: "One-Time", autoDebit: false, activeStudents: 0 },
-  { id: "DON007", name: "Rohit Sinha", occupation: "Accountant", totalDonated: 90000, lastDonation: "2024-03-10", donationType: "Monthly", autoDebit: true, activeStudents: 2 },
-  { id: "DON008", name: "Divya Nair", occupation: "Entrepreneur", totalDonated: 150000, lastDonation: "2024-03-15", donationType: "Monthly", autoDebit: true, activeStudents: 4 },
-  { id: "DON009", name: "Karan Mehta", occupation: "Consultant", totalDonated: 60000, lastDonation: "2024-02-05", donationType: "Quarterly", autoDebit: false, activeStudents: 1 },
-  { id: "DON010", name: "Neha Gupta", occupation: "Scientist", totalDonated: 110000, lastDonation: "2024-03-12", donationType: "Monthly", autoDebit: true, activeStudents: 3 }
+// Mock data with actual student mapping information
+const mockDonorMappings = [
+  {
+    donorId: "DON001",
+    donorName: "John Doe",
+    occupation: "Businessman",
+    totalDonated: 100000,
+    lastDonation: "2024-01-10",
+    donationType: "Monthly",
+    autoDebit: true,
+    activeStudents: 2,
+    isBlocked: false,
+    email: "john.doe@email.com",
+    phone: "+91-9876543210",
+    studentMappings: [
+      {
+        studentId: "STU001",
+        studentName: "Rahul Kumar",
+        college: "Mumbai University",
+        amount: 35000,
+        mappingDate: "2024-01-15",
+        status: "Active"
+      },
+      {
+        studentId: "STU002",
+        studentName: "Priya Sharma",
+        college: "Delhi College",
+        amount: 25000,
+        mappingDate: "2024-01-20",
+        status: "Active"
+      }
+    ],
+    donationHistory: [
+      { date: "2024-01-10", amount: 25000, type: "Monthly" },
+      { date: "2023-12-10", amount: 25000, type: "Monthly" },
+      { date: "2023-11-10", amount: 25000, type: "Monthly" },
+      { date: "2023-10-10", amount: 25000, type: "Monthly" }
+    ]
+  },
+  {
+    donorId: "DON002",
+    donorName: "Sarah Wilson",
+    occupation: "Doctor",
+    totalDonated: 50000,
+    lastDonation: "2024-01-05",
+    donationType: "Quarterly",
+    autoDebit: false,
+    activeStudents: 1,
+    isBlocked: false,
+    email: "sarah.wilson@email.com",
+    phone: "+91-9876543211",
+    studentMappings: [
+      {
+        studentId: "STU003",
+        studentName: "Amit Patel",
+        college: "Bangalore Institute",
+        amount: 50000,
+        mappingDate: "2024-01-10",
+        status: "Active"
+      }
+    ],
+    donationHistory: [
+      { date: "2024-01-05", amount: 50000, type: "Quarterly" },
+      { date: "2023-10-05", amount: 50000, type: "Quarterly" }
+    ]
+  },
+  {
+    donorId: "DON003",
+    donorName: "Amit Patel",
+    occupation: "Engineer",
+    totalDonated: 75000,
+    lastDonation: "2024-02-12",
+    donationType: "One-Time",
+    autoDebit: false,
+    activeStudents: 0,
+    isBlocked: true,
+    email: "amit.patel@email.com",
+    phone: "+91-9876543212",
+    studentMappings: [],
+    donationHistory: [
+      { date: "2024-02-12", amount: 75000, type: "One-Time" }
+    ]
+  },
+  {
+    donorId: "DON004",
+    donorName: "Priya Sharma",
+    occupation: "Teacher",
+    totalDonated: 120000,
+    lastDonation: "2024-03-01",
+    donationType: "Monthly",
+    autoDebit: true,
+    activeStudents: 3,
+    isBlocked: false,
+    email: "priya.sharma@email.com",
+    phone: "+91-9876543213",
+    studentMappings: [
+      {
+        studentId: "STU004",
+        studentName: "Neha Gupta",
+        college: "Chennai University",
+        amount: 40000,
+        mappingDate: "2024-02-01",
+        status: "Active"
+      },
+      {
+        studentId: "STU005",
+        studentName: "Vikram Singh",
+        college: "Pune College",
+        amount: 30000,
+        mappingDate: "2024-02-15",
+        status: "Active"
+      },
+      {
+        studentId: "STU006",
+        studentName: "Meera Das",
+        college: "Hyderabad Institute",
+        amount: 50000,
+        mappingDate: "2024-03-01",
+        status: "Active"
+      }
+    ],
+    donationHistory: [
+      { date: "2024-03-01", amount: 40000, type: "Monthly" },
+      { date: "2024-02-01", amount: 40000, type: "Monthly" },
+      { date: "2024-01-01", amount: 40000, type: "Monthly" }
+    ]
+  },
+  {
+    donorId: "DON005",
+    donorName: "Vikram Singh",
+    occupation: "Lawyer",
+    totalDonated: 30000,
+    lastDonation: "2024-01-20",
+    donationType: "Quarterly",
+    autoDebit: false,
+    activeStudents: 1,
+    isBlocked: false,
+    email: "vikram.singh@email.com",
+    phone: "+91-9876543214",
+    studentMappings: [
+      {
+        studentId: "STU007",
+        studentName: "Rohit Sinha",
+        college: "Kolkata University",
+        amount: 30000,
+        mappingDate: "2024-01-25",
+        status: "Active"
+      }
+    ],
+    donationHistory: [
+      { date: "2024-01-20", amount: 30000, type: "Quarterly" }
+    ]
+  }
 ];
 
 export default function AdminDonors() {
   const [filter, setFilter] = useState("");
   const [openDonor, setOpenDonor] = useState(null);
+  const [openDonationDetails, setOpenDonationDetails] = useState(null);
   const [sortBy, setSortBy] = useState('');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -37,8 +178,19 @@ export default function AdminDonors() {
     }
   };
 
-  let filtered = mockDonors.filter(d =>
-    d.name.toLowerCase().includes(filter.toLowerCase()) || d.id.toLowerCase().includes(filter.toLowerCase())
+  const handleBlockDonor = (donorId: string) => {
+    // In a real application, this would make an API call
+    alert(`Donor ${donorId} has been ${mockDonorMappings.find(d => d.donorId === donorId)?.isBlocked ? 'unblocked' : 'blocked'}`);
+  };
+
+  const handleDirectLogin = (donorId: string) => {
+    // In a real application, this would redirect to donor login or generate a login link
+    alert(`Direct login link generated for donor ${donorId}`);
+  };
+
+  let filtered = mockDonorMappings.filter(d =>
+    d.donorName.toLowerCase().includes(filter.toLowerCase()) || 
+    d.donorId.toLowerCase().includes(filter.toLowerCase())
   );
 
   // Apply sorting
@@ -62,20 +214,20 @@ export default function AdminDonors() {
       </div>
       <Input
         className="mb-4 max-w-xs"
-        placeholder="Filter by name or ID..."
+        placeholder="Filter by donor name or ID..."
         value={filter}
         onChange={e => setFilter(e.target.value)}
       />
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle>Donors</CardTitle>
+          <CardTitle>Donor Mappings</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('id')}>Donor ID {sortBy === 'id' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('name')}>Name {sortBy === 'name' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('donorId')}>Donor ID {sortBy === 'donorId' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('donorName')}>Name {sortBy === 'donorName' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('occupation')}>Occupation {sortBy === 'occupation' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('totalDonated')}>Total Donated {sortBy === 'totalDonated' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('lastDonation')}>Last Donation {sortBy === 'lastDonation' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
@@ -87,80 +239,66 @@ export default function AdminDonors() {
             </TableHeader>
             <TableBody>
               {filtered.map(donor => (
-                <TableRow key={donor.id}>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>{donor.id}</TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>{donor.name}</TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>{donor.occupation}</TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>₹{donor.totalDonated.toLocaleString()}</TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>{donor.lastDonation}</TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>{donor.donationType}</TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>
+                <TableRow key={donor.donorId}>
+                  <TableCell className="text-center">{donor.donorId}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      {donor.donorName}
+                      {donor.isBlocked && <Ban className="h-4 w-4 text-red-500" title="Blocked" />}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">{donor.occupation}</TableCell>
+                  <TableCell className="text-center">₹{donor.totalDonated.toLocaleString()}</TableCell>
+                  <TableCell className="text-center">{donor.lastDonation}</TableCell>
+                  <TableCell className="text-center">{donor.donationType}</TableCell>
+                  <TableCell className="text-center">
                     {donor.autoDebit
                       ? <Badge variant="default" className="bg-green-100 text-green-800">Yes</Badge>
                       : <Badge variant="default" className="bg-yellow-100 text-yellow-800">No</Badge>
                     }
                   </TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}><Badge variant="default" className="bg-blue-100 text-blue-800">{donor.activeStudents}</Badge></TableCell>
-                  <TableCell className="text-center" style={{textAlign: 'center'}}>
-                    <Button size="sm" variant="outline" onClick={() => setOpenDonor(donor)}>View</Button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          Mapping
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Donor-Student Mapping for {donor.name}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="p-4 bg-muted rounded-lg">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <div className="font-semibold">Total Donated:</div>
-                                <div className="text-2xl font-bold text-green-600">₹{donor.totalDonated.toLocaleString()}</div>
-                              </div>
-                              <div>
-                                <div className="font-semibold">Active Students:</div>
-                                <div className="text-2xl font-bold text-blue-600">{donor.activeStudents}</div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {donor.activeStudents > 0 && (
-                            <div>
-                              <h4 className="font-semibold mb-2">Currently Sponsored Students:</h4>
-                              <div className="space-y-2">
-                                {Array.from({length: donor.activeStudents}, (_, i) => (
-                                  <div key={i} className="flex justify-between items-center p-3 border rounded">
-                                    <div>
-                                      <div className="font-medium">Student {i + 1}</div>
-                                      <div className="text-sm text-muted-foreground">Engineering College</div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="font-semibold">₹{(50000 - i * 5000).toLocaleString()}</div>
-                                      <Badge variant="default">Active</Badge>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline">
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Send Message
-                            </Button>
-                            <Button>
-                              <Gift className="h-4 w-4 mr-2" />
-                              Create New Mapping
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                  <TableCell className="text-center">
+                    <Badge variant="default" className="bg-blue-100 text-blue-800">{donor.activeStudents}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex gap-1 justify-center">
+                      <Button 
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setOpenDonor(donor)}
+                        className="h-8 w-8 p-0"
+                        title="View Details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleBlockDonor(donor.donorId)}
+                        className={`h-8 w-8 p-0 ${donor.isBlocked ? 'text-yellow-600 hover:text-yellow-700' : 'text-red-600 hover:text-red-700'}`}
+                        title={donor.isBlocked ? "Unblock" : "Block"}
+                      >
+                        <Ban className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setOpenDonationDetails(donor)}
+                        className="h-8 w-8 p-0"
+                        title="Donation Details"
+                      >
+                        <Gift className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDirectLogin(donor.donorId)}
+                        className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                        title="Direct Login"
+                      >
+                        <LogIn className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -168,21 +306,137 @@ export default function AdminDonors() {
           </Table>
         </CardContent>
       </Card>
+
       {/* Donor Details Modal */}
       <Dialog open={!!openDonor} onOpenChange={() => setOpenDonor(null)}>
-        <DialogContent className="max-w-lg w-full p-6">
+        <DialogContent className="max-w-4xl">
           {openDonor && (
             <>
               <DialogHeader>
-                <DialogTitle>{openDonor.name} ({openDonor.id})</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  {openDonor.donorName} ({openDonor.donorId})
+                  {openDonor.isBlocked && <Ban className="h-5 w-5 text-red-500" title="Blocked" />}
+                </DialogTitle>
               </DialogHeader>
-              <div className="mb-2"><b>Occupation:</b> {openDonor.occupation}</div>
-              <div className="mb-2"><b>Total Donated:</b> ₹{openDonor.totalDonated.toLocaleString()}</div>
-              <div className="mb-2"><b>Last Donation:</b> {openDonor.lastDonation}</div>
-              <div className="mb-2"><b>Donation Type:</b> {openDonor.donationType}</div>
-              <div className="mb-2"><b>Auto Debit:</b> {openDonor.autoDebit ? "Yes" : "No"}</div>
-              <div className="mb-2"><b>Active Students:</b> {openDonor.activeStudents}</div>
-              <Button variant="outline" className="mt-4">Edit Details</Button>
+              <div className="space-y-6">
+                {/* Donor Information */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Total Donated</div>
+                    <div className="text-2xl font-bold text-green-600">₹{openDonor.totalDonated.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Active Students</div>
+                    <div className="text-2xl font-bold text-blue-600">{openDonor.activeStudents}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Occupation</div>
+                    <div className="text-lg">{openDonor.occupation}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Donation Type</div>
+                    <div className="text-lg">{openDonor.donationType}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Last Donation</div>
+                    <div className="text-lg">{openDonor.lastDonation}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Auto Debit</div>
+                    <div className="text-lg">
+                      {openDonor.autoDebit ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800">Yes</Badge>
+                      ) : (
+                        <Badge variant="default" className="bg-yellow-100 text-yellow-800">No</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Email</div>
+                    <div className="text-lg">{openDonor.email}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Phone</div>
+                    <div className="text-lg">{openDonor.phone}</div>
+                  </div>
+                </div>
+
+                {/* Student Mappings */}
+                {openDonor.studentMappings.length > 0 ? (
+                  <div>
+                    <h4 className="font-semibold mb-4">Sponsored Students</h4>
+                    <div className="space-y-3">
+                      {openDonor.studentMappings.map((mapping, index) => (
+                        <div key={mapping.studentId} className="flex justify-between items-center p-4 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium">{mapping.studentName}</div>
+                            <div className="text-sm text-muted-foreground">{mapping.college}</div>
+                            <div className="text-xs text-muted-foreground">Student ID: {mapping.studentId}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-lg">₹{mapping.amount.toLocaleString()}</div>
+                            <div className="text-sm text-muted-foreground">Mapped: {mapping.mappingDate}</div>
+                            <Badge variant="default" className="bg-green-100 text-green-800 mt-1">
+                              {mapping.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No students currently mapped to this donor</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Donation Details Modal */}
+      <Dialog open={!!openDonationDetails} onOpenChange={() => setOpenDonationDetails(null)}>
+        <DialogContent className="max-w-2xl">
+          {openDonationDetails && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Gift className="h-5 w-5" />
+                  Donation History - {openDonationDetails.donorName}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Total Donated</div>
+                    <div className="text-2xl font-bold text-green-600">₹{openDonationDetails.totalDonated.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-muted-foreground">Donation Type</div>
+                    <div className="text-lg">{openDonationDetails.donationType}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-4">Donation History</h4>
+                  <div className="space-y-3">
+                    {openDonationDetails.donationHistory.map((donation, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                          <div className="font-medium">{donation.date}</div>
+                          <div className="text-sm text-muted-foreground">{donation.type}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-lg">₹{donation.amount.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </DialogContent>

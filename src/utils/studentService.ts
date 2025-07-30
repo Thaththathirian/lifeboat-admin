@@ -1,4 +1,11 @@
 import { Student, StudentsResponse, StudentsRequest, StudentStatus } from '@/types/student';
+import { 
+  getStatusText as getStatusTextFromConfig, 
+  getStatusColor as getStatusColorFromConfig, 
+  getStatusApiKey as getStatusApiKeyFromConfig, 
+  getPreviousStatus as getPreviousStatusFromConfig, 
+  getNextStatus as getNextStatusFromConfig 
+} from '../config/studentStatus';
 
 // Get the correct API base URL for development and production
 const getApiBaseUrl = () => {
@@ -10,44 +17,24 @@ const getApiBaseUrl = () => {
 
 // Map status enum to display text
 export const getStatusText = (status: StudentStatus): string => {
-  const statusMap: Record<StudentStatus, string> = {
-    [StudentStatus.NEW_USER]: 'New User',
-    [StudentStatus.MOBILE_VERIFIED]: 'Mobile Verified',
-    [StudentStatus.PROFILE_UPDATED]: 'Profile Updated',
-    [StudentStatus.PROFILE_APPROVED]: 'Profile Approved',
-    [StudentStatus.INTERVIEW_SCHEDULED]: 'Interview Scheduled',
-    [StudentStatus.DOCUMENT_UPLOADED]: 'Document Uploaded',
-    [StudentStatus.WAITING_FOR_PAYMENT]: 'Waiting for Payment',
-    [StudentStatus.PAYMENT_COMPLETED]: 'Payment Completed',
-    [StudentStatus.PAYMENT_VERIFIED]: 'Payment Verified',
-    [StudentStatus.RECEIPT_VERIFIED]: 'Receipt Verified',
-    [StudentStatus.CERTIFICATE_UPLOADED]: 'Certificate Uploaded',
-    [StudentStatus.NEXT_SEMESTER]: 'Next Semester',
-    [StudentStatus.ALUMNI]: 'Alumni',
-    [StudentStatus.BLOCKED]: 'Blocked',
-  };
-  return statusMap[status] || 'Unknown Status';
+  return getStatusTextFromConfig(status);
 };
 
 // Get status color classes
 export const getStatusColor = (status: StudentStatus): string => {
-  const colorMap: Record<StudentStatus, string> = {
-    [StudentStatus.NEW_USER]: 'bg-blue-100 text-blue-800',
-    [StudentStatus.MOBILE_VERIFIED]: 'bg-cyan-100 text-cyan-800',
-    [StudentStatus.PROFILE_UPDATED]: 'bg-gray-100 text-gray-800',
-    [StudentStatus.PROFILE_APPROVED]: 'bg-green-100 text-green-800',
-    [StudentStatus.INTERVIEW_SCHEDULED]: 'bg-purple-100 text-purple-800',
-    [StudentStatus.DOCUMENT_UPLOADED]: 'bg-yellow-100 text-yellow-800',
-    [StudentStatus.WAITING_FOR_PAYMENT]: 'bg-orange-100 text-orange-800',
-    [StudentStatus.PAYMENT_COMPLETED]: 'bg-green-200 text-green-900',
-    [StudentStatus.PAYMENT_VERIFIED]: 'bg-green-300 text-green-900',
-    [StudentStatus.RECEIPT_VERIFIED]: 'bg-green-400 text-green-900',
-    [StudentStatus.CERTIFICATE_UPLOADED]: 'bg-indigo-100 text-indigo-800',
-    [StudentStatus.NEXT_SEMESTER]: 'bg-pink-100 text-pink-800',
-    [StudentStatus.ALUMNI]: 'bg-teal-100 text-teal-800',
-    [StudentStatus.BLOCKED]: 'bg-red-100 text-red-800',
-  };
-  return colorMap[status] || 'bg-gray-200 text-gray-700';
+  return getStatusColorFromConfig(status);
+};
+
+export const getStatusApiKey = (status: StudentStatus): string => {
+  return getStatusApiKeyFromConfig(status);
+};
+
+export const getPreviousStatus = (currentStatus: StudentStatus): StudentStatus | null => {
+  return getPreviousStatusFromConfig(currentStatus);
+};
+
+export const getNextStatus = (currentStatus: StudentStatus): StudentStatus | null => {
+  return getNextStatusFromConfig(currentStatus);
 };
 
 // Get authentication token from localStorage (same as college service)
@@ -285,6 +272,52 @@ export const updateStudentStatus = async (studentId: string, newStatus: StudentS
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update student status',
+    };
+  }
+};
+
+// Update multiple student statuses
+export const updateMultipleStudentStatuses = async (studentIds: string[], newStatus: StudentStatus): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const apiUrl = `${getApiBaseUrl()}/Admin/update_multiple_student_statuses`;
+    
+    // Get authentication token
+    const authToken = getAuthToken();
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+    };
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    } else {
+      console.warn('⚠️ No auth token found for bulk status update');
+    }
+    
+    // Create FormData for key-value pair format
+    const formData = new FormData();
+    formData.append('student_ids', JSON.stringify(studentIds));
+    formData.append('status', newStatus.toString());
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Bulk status update response:', data);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update multiple student statuses:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update multiple student statuses',
     };
   }
 };

@@ -258,30 +258,8 @@ function App() {
         
         <Route path="/admin/students" element={
           <ProtectedAdminRoute>
-            <Navigate to="/admin/students/all" replace />
-          </ProtectedAdminRoute>
-        } />
-        
-        <Route path="/admin/students/all" element={
-          <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
               <AdminStudents initialTab="all" />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-        
-        <Route path="/admin/students/applied" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminStudents initialTab="applied" />
-            </DashboardLayout>
-          </ProtectedAdminRoute>
-        } />
-        
-        <Route path="/admin/students/approved" element={
-          <ProtectedAdminRoute>
-            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminStudents initialTab="approved" />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />

@@ -70,19 +70,7 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
       {
         title: "Students",
         path: "/admin/students",
-        icon: <GraduationCap className="h-4 w-4" />,
-        children: [
-          {
-            title: "All Students",
-            path: "/admin/students/all",
-            icon: <Users className="h-4 w-4" />
-          },
-          {
-            title: "Applied Students",
-            path: "/admin/students/applied",
-            icon: <FileText className="h-4 w-4" />
-          }
-        ]
+        icon: <GraduationCap className="h-4 w-4" />
       },
       {
         title: "Colleges",

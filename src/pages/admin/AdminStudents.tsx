@@ -5,45 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Eye, UserCheck, Ban, LogIn, ArrowUp, ArrowDown, Filter, Info, CheckCircle, XCircle, Square, CheckSquare, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Student, StudentStatus } from "@/types/student";
 import { fetchStudents, updateStudentStatus, blockStudent, getStatusColor, getStatusText } from "@/utils/studentService";
-
-// Status mapping for display
-const statusDisplayMap = {
-  [StudentStatus.NEW_USER]: "New User",
-  [StudentStatus.MOBILE_VERIFIED]: "Mobile Verified", 
-  [StudentStatus.PROFILE_UPDATED]: "Profile Updated",
-  [StudentStatus.PROFILE_APPROVED]: "Profile Approved",
-  [StudentStatus.INTERVIEW_SCHEDULED]: "Interview Scheduled",
-  [StudentStatus.DOCUMENT_UPLOADED]: "Document Uploaded",
-  [StudentStatus.WAITING_FOR_PAYMENT]: "Waiting for Payment",
-  [StudentStatus.PAYMENT_COMPLETED]: "Payment Completed",
-  [StudentStatus.PAYMENT_VERIFIED]: "Payment Verified",
-  [StudentStatus.RECEIPT_VERIFIED]: "Receipt Verified",
-  [StudentStatus.CERTIFICATE_UPLOADED]: "Certificate Uploaded",
-  [StudentStatus.NEXT_SEMESTER]: "Next Semester",
-  [StudentStatus.ALUMNI]: "Alumni",
-  [StudentStatus.BLOCKED]: "Blocked"
-};
+import { 
+  statusDisplayMap, 
+  statusOrder, 
+  statusApiMap 
+} from "@/config/studentStatus";
 
 const allStatuses = Object.values(StudentStatus).filter(status => typeof status === 'number');
-const statusSteps = [
-  StudentStatus.NEW_USER,
-  StudentStatus.MOBILE_VERIFIED,
-  StudentStatus.PROFILE_UPDATED,
-  StudentStatus.PROFILE_APPROVED,
-  StudentStatus.INTERVIEW_SCHEDULED,
-  StudentStatus.DOCUMENT_UPLOADED,
-  StudentStatus.WAITING_FOR_PAYMENT,
-  StudentStatus.PAYMENT_COMPLETED,
-  StudentStatus.PAYMENT_VERIFIED,
-  StudentStatus.RECEIPT_VERIFIED,
-  StudentStatus.CERTIFICATE_UPLOADED,
-  StudentStatus.NEXT_SEMESTER,
-  StudentStatus.ALUMNI
-];
+const statusSteps = statusOrder;
 
 // Mock data for fallback (will be replaced by API data)
 const mockStudents: Student[] = [];
@@ -54,15 +27,13 @@ function getValidNextStatuses(student: Student): StudentStatus[] {
   let valid = base;
   
   // Filter based on student's current state
-  if (!(student.interviewCompleted && student.documentsVerified)) {
-    valid = valid.filter(s => s !== StudentStatus.PROFILE_APPROVED);
-  }
+  // Note: Removed PROFILE_APPROVED filter as it no longer exists in the new status enum
+  // Additional filtering logic can be added here based on new status requirements
   
   return valid;
 }
 
-export default function AdminStudents({ initialTab = "all" }) {
-  const [tab, setTab] = useState(initialTab);
+export default function AdminStudents() {
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "">("");
   const [sortBy, setSortBy] = useState("name");
@@ -191,31 +162,12 @@ export default function AdminStudents({ initialTab = "all" }) {
     loadStudentsByStatus(status);
   };
 
-  // Helper function to map tab to status
-  const getTabStatus = (tab: string): StudentStatus | null => {
-    switch (tab) {
-      case "new_user": return StudentStatus.NEW_USER;
-      case "mobile_verified": return StudentStatus.MOBILE_VERIFIED;
-      case "profile_updated": return StudentStatus.PROFILE_UPDATED;
-      case "profile_approved": return StudentStatus.PROFILE_APPROVED;
-      case "interview_scheduled": return StudentStatus.INTERVIEW_SCHEDULED;
-      case "document_uploaded": return StudentStatus.DOCUMENT_UPLOADED;
-      case "waiting_for_payment": return StudentStatus.WAITING_FOR_PAYMENT;
-      case "payment_completed": return StudentStatus.PAYMENT_COMPLETED;
-      case "payment_verified": return StudentStatus.PAYMENT_VERIFIED;
-      case "receipt_verified": return StudentStatus.RECEIPT_VERIFIED;
-      case "certificate_uploaded": return StudentStatus.CERTIFICATE_UPLOADED;
-      case "next_semester": return StudentStatus.NEXT_SEMESTER;
-      case "alumni": return StudentStatus.ALUMNI;
-      case "blocked": return StudentStatus.BLOCKED;
-      default: return null;
-    }
-  };
+
 
   // Filter and sort students
   let filtered = students.filter(s => {
-    // Use currentStatus if set (from status grid), otherwise use tab-based filtering
-    const statusFilter = currentStatus !== null ? s.status === currentStatus : (tab === "all" || s.status === getTabStatus(tab));
+    // Use currentStatus if set (from status grid), otherwise show all students
+    const statusFilter = currentStatus !== null ? s.status === currentStatus : true;
     
     return statusFilter &&
       (s.name.toLowerCase().includes(filter.toLowerCase()) || 
@@ -254,10 +206,10 @@ export default function AdminStudents({ initialTab = "all" }) {
       const result = await updateStudentStatus(selectedStudent.id, newStatus);
       
       if (result.success) {
-        if (newStatus === StudentStatus.PAYMENT_COMPLETED) {
+        if (newStatus === StudentStatus.PAID) {
       const transactionId = generateTransactionId();
           console.log(`Transaction ID generated for student ${selectedStudent.id}: ${transactionId}`);
-          alert(`Status updated to Payment Completed. Transaction ID: ${transactionId}`);
+          alert(`Status updated to Paid. Transaction ID: ${transactionId}`);
         } else {
           alert(`Status updated to ${getStatusText(newStatus)}`);
         }
@@ -316,16 +268,16 @@ export default function AdminStudents({ initialTab = "all" }) {
         const result = await updateStudentStatus(studentId, bulkStatus);
         if (result.success) {
           successCount++;
-          if (bulkStatus === StudentStatus.PAYMENT_COMPLETED) {
+          if (bulkStatus === StudentStatus.PAID) {
         const transactionId = generateTransactionId();
             transactionIds.push(transactionId);
           }
         }
       }
       
-      if (bulkStatus === StudentStatus.PAYMENT_COMPLETED && transactionIds.length > 0) {
+      if (bulkStatus === StudentStatus.PAID && transactionIds.length > 0) {
       console.log("Bulk transaction IDs generated:", transactionIds);
-        alert(`Bulk status updated to Payment Completed. ${transactionIds.length} transaction IDs generated.`);
+        alert(`Bulk status updated to Paid. ${transactionIds.length} transaction IDs generated.`);
       } else {
         alert(`Bulk status updated to ${getStatusText(bulkStatus)}. ${successCount} students updated.`);
       }
@@ -374,23 +326,7 @@ export default function AdminStudents({ initialTab = "all" }) {
 
   // Helper function to convert StudentStatus enum to API status key
   const getStatusKey = (status: StudentStatus): string => {
-    const statusMap: Record<StudentStatus, string> = {
-      [StudentStatus.NEW_USER]: 'new_user',
-      [StudentStatus.MOBILE_VERIFIED]: 'mobile_verified',
-      [StudentStatus.PROFILE_UPDATED]: 'profile_updated',
-      [StudentStatus.PROFILE_APPROVED]: 'profile_approved',
-      [StudentStatus.INTERVIEW_SCHEDULED]: 'interview_scheduled',
-      [StudentStatus.DOCUMENT_UPLOADED]: 'document_uploaded',
-      [StudentStatus.WAITING_FOR_PAYMENT]: 'waiting_for_payment',
-      [StudentStatus.PAYMENT_COMPLETED]: 'payment_completed',
-      [StudentStatus.PAYMENT_VERIFIED]: 'payment_verified',
-      [StudentStatus.RECEIPT_VERIFIED]: 'receipt_verified',
-      [StudentStatus.CERTIFICATE_UPLOADED]: 'certificate_uploaded',
-      [StudentStatus.NEXT_SEMESTER]: 'next_semester',
-      [StudentStatus.ALUMNI]: 'alumni',
-      [StudentStatus.BLOCKED]: 'blocked',
-    };
-    return statusMap[status] || 'unknown';
+    return statusApiMap[status] || 'unknown';
   };
 
   // For bulk, only show statuses allowed for all selected students

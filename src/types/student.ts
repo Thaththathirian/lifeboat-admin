@@ -1,18 +1,19 @@
+// Student Status Constants
 export enum StudentStatus {
   NEW_USER = 0,
   MOBILE_VERIFIED = 1,
   PROFILE_UPDATED = 2,
-  PROFILE_APPROVED = 3,
-  INTERVIEW_SCHEDULED = 4,
-  DOCUMENT_UPLOADED = 5,
-  WAITING_FOR_PAYMENT = 6,
-  PAYMENT_COMPLETED = 7,
-  PAYMENT_VERIFIED = 8,
-  RECEIPT_VERIFIED = 9,
-  CERTIFICATE_UPLOADED = 10,
-  NEXT_SEMESTER = 11,
+  PERSONAL_DOCUMENTS_PENDING = 3,
+  PERSONAL_DOCUMENTS_SUBMITTED = 4,
+  INTERVIEW_SCHEDULED = 5,
+  ACADEMIC_DOCUMENTS_PENDING = 6,
+  ACADEMIC_DOCUMENTS_SUBMITTED = 7,
+  ELIGIBLE_FOR_SCHOLARSHIP = 8,
+  PAYMENT_PENDING = 9,
+  PAID = 10,
+  RECEIPT_DOCUMENTS_SUBMITTED = 11,
   ALUMNI = 12,
-  BLOCKED = 13,
+  BLOCKED = 13
 }
 
 export interface Student {
@@ -28,6 +29,8 @@ export interface Student {
   interviewCompleted: boolean;
   documentsVerified: boolean;
   statusBar: string[];
+  collegeFee?: number; // College fee for the student
+  lastAllottedAmount?: number; // Last amount allotted to this student
 }
 
 export interface StudentsResponse {
@@ -45,4 +48,47 @@ export interface StudentsRequest {
   limit: number;
   status?: StudentStatus;
   search?: string;
+}
+
+// Payment Allotment Types
+export interface Donor {
+  id: string;
+  name: string;
+  amount: number;
+  allocated: number;
+  unallocated: number;
+}
+
+export interface PaymentAllotment {
+  id: string;
+  studentId: string;
+  studentName: string;
+  college: string;
+  collegeFee: number;
+  allottedAmount: number;
+  status: 'pending' | 'paid';
+  date: string;
+  description?: string;
+}
+
+export interface Transaction {
+  id: string;
+  studentId: string;
+  studentName: string;
+  college: string;
+  amount: number;
+  date: string;
+  status: 'completed' | 'pending' | 'failed';
+}
+
+export interface PaymentMapping {
+  id: string;
+  donorId: string;
+  donorName: string;
+  transactionId: string;
+  studentId: string;
+  studentName: string;
+  college: string;
+  amount: number;
+  date: string;
 } 
