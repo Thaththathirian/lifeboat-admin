@@ -83,11 +83,6 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
         icon: <Heart className="h-4 w-4" />
       },
       {
-        title: "Payment Allotment",
-        path: "/admin/payments",
-        icon: <CreditCard className="h-4 w-4" />
-      },
-      {
         title: "Messages",
         path: "/admin/messages",
         icon: <MessageSquare className="h-4 w-4" />
@@ -103,7 +98,8 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
   const navItems = getNavItems()
 
   const renderNavItem = (item: NavItem, level: number = 0) => {
-    const isActive = location.pathname === item.path;
+    const isActive = location.pathname === item.path || 
+      (item.title === "Students" && location.pathname === "/admin/payment-allotment");
     const isExpanded = item.children && (expandedItems.includes(item.title) || item.children!.some(child => location.pathname === child.path));
     const hasChildren = item.children && item.children.length > 0
 

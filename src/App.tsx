@@ -16,7 +16,9 @@ import AdminNotifications from "@/pages/admin/AdminNotifications"
 import AdminStudents from "@/pages/admin/AdminStudents"
 import AdminColleges from "@/pages/admin/AdminColleges"
 import AdminDonors from "@/pages/admin/AdminDonors"
-import AdminPaymentAllotment from "@/pages/admin/AdminPaymentAllotment"
+
+import PaymentAllotmentPage from "@/pages/admin/PaymentAllotmentPage"
+import DonorMappingPage from "@/pages/admin/DonorMappingPage"
 import AdminOAuthCallback from "@/pages/admin/AdminOAuthCallback"
 import AdminOAuthTest from "@/pages/admin/AdminOAuthTest"
 
@@ -387,18 +389,20 @@ function App() {
         <Route path="/admin/payment-allotment" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminPaymentAllotment />
+              <PaymentAllotmentPage />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
         
-        <Route path="/admin/payments" element={
+        <Route path="/admin/donor-mapping" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminPaymentAllotment />
+              <DonorMappingPage />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
+        
+
         
         <Route path="/admin/oauth-test" element={
           <ProtectedAdminRoute>

@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowUp, ArrowDown, Eye, Users, Ban, Gift, LogIn, AlertTriangle } from "lucide-react";
+import { ArrowUp, ArrowDown, Eye, Users, Ban, Gift, LogIn, AlertTriangle, MapPin, Square, CheckSquare } from "lucide-react";
 
 // Mock data with actual student mapping information
 const mockDonorMappings = [
@@ -163,11 +164,13 @@ const mockDonorMappings = [
 ];
 
 export default function AdminDonors() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("");
   const [openDonor, setOpenDonor] = useState(null);
   const [openDonationDetails, setOpenDonationDetails] = useState(null);
   const [sortBy, setSortBy] = useState('');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [selectedDonors, setSelectedDonors] = useState<string[]>([]);
 
   const handleSort = (col: string) => {
     if (sortBy === col) {
@@ -188,6 +191,36 @@ export default function AdminDonors() {
     alert(`Direct login link generated for donor ${donorId}`);
   };
 
+  const toggleDonorSelection = (donorId: string) => {
+    setSelectedDonors(prev => 
+      prev.includes(donorId) 
+        ? prev.filter(id => id !== donorId)
+        : [...prev, donorId]
+    );
+  };
+
+  // Calculate unallocated amount for a donor
+  const getUnallocatedAmount = (donor: any) => {
+    const totalAllocated = donor.studentMappings.reduce((sum: number, mapping: any) => sum + mapping.amount, 0);
+    return donor.totalDonated - totalAllocated;
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedDonors.length === filtered.length) {
+      setSelectedDonors([]);
+    } else {
+      setSelectedDonors(filtered.map(d => d.donorId));
+    }
+  };
+
+  const handleMapping = () => {
+    if (selectedDonors.length === 0) {
+      alert("Please select donors for mapping.");
+      return;
+    }
+    navigate('/admin/donor-mapping', { state: { selectedDonors } });
+  };
+
   let filtered = mockDonorMappings.filter(d =>
     d.donorName.toLowerCase().includes(filter.toLowerCase()) || 
     d.donorId.toLowerCase().includes(filter.toLowerCase())
@@ -196,8 +229,8 @@ export default function AdminDonors() {
   // Apply sorting
   if (sortBy) {
     filtered = [...filtered].sort((a, b) => {
-      let aVal = a[sortBy];
-      let bVal = b[sortBy];
+      let aVal = sortBy === 'unallocated' ? getUnallocatedAmount(a) : a[sortBy];
+      let bVal = sortBy === 'unallocated' ? getUnallocatedAmount(b) : b[sortBy];
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
       if (typeof bVal === 'string') bVal = bVal.toLowerCase();
       if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
@@ -210,7 +243,18 @@ export default function AdminDonors() {
     <div className="main-content-container">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Donor Management</h2>
-        <Button variant="outline">Download List</Button>
+        <div className="flex gap-2">
+          <Button variant="outline">Download List</Button>
+          <Button 
+            variant="default" 
+            disabled={selectedDonors.length === 0} 
+            onClick={handleMapping}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <MapPin className="inline h-4 w-4 mr-2" />
+            Map Payments
+          </Button>
+        </div>
       </div>
       <Input
         className="mb-4 max-w-xs"
@@ -226,10 +270,14 @@ export default function AdminDonors() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="text-center cursor-pointer w-8" onClick={toggleSelectAll} title={selectedDonors.length === filtered.length ? 'Deselect All' : 'Select All'}>
+                  {selectedDonors.length === filtered.length ? <CheckSquare className="h-5 w-5 text-blue-600 mx-auto" /> : <Square className="h-5 w-5 text-gray-400 mx-auto" />}
+                </TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('donorId')}>Donor ID {sortBy === 'donorId' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('donorName')}>Name {sortBy === 'donorName' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('occupation')}>Occupation {sortBy === 'occupation' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('totalDonated')}>Total Donated {sortBy === 'totalDonated' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('unallocated')}>Unallocated Amount {sortBy === 'unallocated' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('lastDonation')}>Last Donation {sortBy === 'lastDonation' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('donationType')}>Donation Type {sortBy === 'donationType' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('autoDebit')}>Auto Debit {sortBy === 'autoDebit' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
@@ -240,6 +288,17 @@ export default function AdminDonors() {
             <TableBody>
               {filtered.map(donor => (
                 <TableRow key={donor.donorId}>
+                  <TableCell className="text-center w-8">
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={() => toggleDonorSelection(donor.donorId)} 
+                      title={selectedDonors.includes(donor.donorId) ? 'Deselect' : 'Select'}
+                      className="h-8 w-8 p-0"
+                    >
+                      {selectedDonors.includes(donor.donorId) ? <CheckSquare className="h-5 w-5 text-blue-600 mx-auto" /> : <Square className="h-5 w-5 text-gray-400 mx-auto" />}
+                    </Button>
+                  </TableCell>
                   <TableCell className="text-center">{donor.donorId}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">
@@ -249,6 +308,11 @@ export default function AdminDonors() {
                   </TableCell>
                   <TableCell className="text-center">{donor.occupation}</TableCell>
                   <TableCell className="text-center">₹{donor.totalDonated.toLocaleString()}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-md border border-green-200 inline-block">
+                      ₹{getUnallocatedAmount(donor).toLocaleString()}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-center">{donor.lastDonation}</TableCell>
                   <TableCell className="text-center">{donor.donationType}</TableCell>
                   <TableCell className="text-center">

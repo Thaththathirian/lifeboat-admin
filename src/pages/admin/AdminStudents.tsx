@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-import { Eye, UserCheck, Ban, LogIn, ArrowUp, ArrowDown, Filter, Info, CheckCircle, XCircle, Square, CheckSquare, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Eye, UserCheck, Ban, LogIn, ArrowUp, ArrowDown, Filter, Info, CheckCircle, XCircle, Square, CheckSquare, Loader2, ChevronDown, ChevronUp, CreditCard, DollarSign } from "lucide-react";
 import { Student, StudentStatus } from "@/types/student";
 import { fetchStudents, updateStudentStatus, blockStudent, getStatusColor, getStatusText } from "@/utils/studentService";
 import { 
@@ -34,6 +35,8 @@ function getValidNextStatuses(student: Student): StudentStatus[] {
 }
 
 export default function AdminStudents() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "">("");
   const [sortBy, setSortBy] = useState("name");
@@ -62,6 +65,19 @@ export default function AdminStudents() {
   // Status grid state
   const [isStatusGridExpanded, setIsStatusGridExpanded] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<StudentStatus | null>(null);
+
+  // Handle location state when coming back from payment allotment
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      // Set the current status to show the appropriate tab
+      setCurrentStatus(location.state.activeTab === 'all' ? null : location.state.activeTab);
+      
+      // If preserveSelection is true, restore the selected students
+      if (location.state?.preserveSelection && location.state?.selectedStudents) {
+        setSelected(location.state.selectedStudents);
+      }
+    }
+  }, [location.state]);
 
   // Fetch students from API - only call once on component mount
   useEffect(() => {
@@ -300,6 +316,33 @@ export default function AdminStudents() {
     setBulkStatusModal(false);
   };
 
+  const handleUpdateToPaid = async (studentId: string) => {
+    try {
+      // Update student status to PAID
+      const result = await updateStudentStatus(studentId, StudentStatus.PAID);
+      if (!result.success) {
+        console.error(`Failed to update status for student ${studentId}:`, result.error);
+        alert(`Failed to update status for student ${studentId}`);
+        return;
+      }
+
+      // Create transaction ID
+      const transactionId = generateTransactionId();
+      
+      // In a real application, you would save this transaction to the database
+      console.log(`Created transaction ${transactionId} for student ${studentId}`);
+      
+      alert(`Student status updated to Paid. Transaction ID: ${transactionId}`);
+      
+      // Refresh the students list
+      loadStudentsByStatus(currentStatus);
+      
+    } catch (error) {
+      console.error('Failed to update student to paid:', error);
+      alert('Failed to update student status. Please try again.');
+    }
+  };
+
   const allSelected = selected.length === filtered.length && filtered.length > 0;
   const toggleSelect = (id: string) => {
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -359,6 +402,14 @@ export default function AdminStudents() {
             className="w-full sm:w-auto"
           >
             <UserCheck className="inline h-4 w-4 mr-2" />Bulk Status Change
+          </Button>
+          <Button 
+            variant="default" 
+            disabled={selected.length === 0} 
+            onClick={() => navigate('/admin/payment-allotment', { state: { selectedStudents: selected } })}
+            className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+          >
+            <CreditCard className="inline h-4 w-4 mr-2" />Allot Payment
           </Button>
         </div>
       </div>
@@ -602,6 +653,17 @@ export default function AdminStudents() {
                               className="h-8 w-8"
                             >
                               <LogIn className="h-4 w-4 text-gray-600" />
+                            </Button>
+                          )}
+                          {hasStudentId && student.status === StudentStatus.PAYMENT_PENDING && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              title="Mark as Paid" 
+                              onClick={() => handleUpdateToPaid(uniqueKey)}
+                              className="h-8 w-8"
+                            >
+                              <DollarSign className="h-4 w-4 text-green-600" />
                             </Button>
                           )}
                         </div>
