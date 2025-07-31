@@ -25,7 +25,7 @@ const mockStudents: Student[] = [];
 function getValidNextStatuses(student: Student): StudentStatus[] {
   // Get all valid statuses based on student's current state
   const base = Object.values(StudentStatus).filter(status => typeof status === 'number');
-  let valid = base;
+  const valid = base;
   
   // Filter based on student's current state
   // Note: Removed PROFILE_APPROVED filter as it no longer exists in the new status enum

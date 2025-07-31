@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -165,12 +165,20 @@ const mockDonorMappings = [
 
 export default function AdminDonors() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [filter, setFilter] = useState("");
   const [openDonor, setOpenDonor] = useState(null);
   const [openDonationDetails, setOpenDonationDetails] = useState(null);
   const [sortBy, setSortBy] = useState('');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedDonors, setSelectedDonors] = useState<string[]>([]);
+
+  // Handle preserved selections when navigating back from donor mapping
+  useEffect(() => {
+    if (location.state?.selectedDonors) {
+      setSelectedDonors(location.state.selectedDonors);
+    }
+  }, [location.state]);
 
   const handleSort = (col: string) => {
     if (sortBy === col) {

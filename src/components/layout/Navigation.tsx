@@ -28,7 +28,9 @@ import {
   Phone,
   Mail,
   ChevronRight,
-  LogOut
+  LogOut,
+  Clock,
+  History
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 // Removed StudentStatusProvider import for admin-only setup
@@ -83,6 +85,16 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
         icon: <Heart className="h-4 w-4" />
       },
       {
+        title: "Transactions",
+        path: "/admin/transactions",
+        icon: <CreditCard className="h-4 w-4" />
+      },
+      {
+        title: "Schedulers",
+        path: "/admin/schedulers",
+        icon: <Clock className="h-4 w-4" />
+      },
+      {
         title: "Messages",
         path: "/admin/messages",
         icon: <MessageSquare className="h-4 w-4" />
@@ -99,7 +111,9 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
 
   const renderNavItem = (item: NavItem, level: number = 0) => {
     const isActive = location.pathname === item.path || 
-      (item.title === "Students" && location.pathname === "/admin/payment-allotment");
+      (item.title === "Students" && location.pathname === "/admin/payment-allotment") ||
+      (item.title === "Transactions" && location.pathname === "/admin/donor-selection") ||
+      (item.title === "Donors" && location.pathname === "/admin/donor-mapping");
     const isExpanded = item.children && (expandedItems.includes(item.title) || item.children!.some(child => location.pathname === child.path));
     const hasChildren = item.children && item.children.length > 0
 

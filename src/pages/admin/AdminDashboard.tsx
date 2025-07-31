@@ -7,7 +7,6 @@ import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Calendar, Download, Filter, TrendingUp, Users, DollarSign } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
 
 const mockDonationData = [
   { month: "Jan", amount: 450000, donors: 25 },
@@ -44,7 +43,6 @@ const mockRecentTransactions = [
 export default function AdminDashboard() {
   const [filterType, setFilterType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
 
   const totalDonations = mockDonationData.reduce((sum, item) => sum + item.amount, 0);
   const totalDonors = Math.max(...mockDonationData.map(item => item.donors));
@@ -58,9 +56,6 @@ export default function AdminDashboard() {
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export Report
-          </Button>
-          <Button onClick={() => navigate('/admin/payments')} variant="default">
-            Payment Allotment
           </Button>
         </div>
       </div>

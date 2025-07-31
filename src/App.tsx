@@ -16,6 +16,9 @@ import AdminNotifications from "@/pages/admin/AdminNotifications"
 import AdminStudents from "@/pages/admin/AdminStudents"
 import AdminColleges from "@/pages/admin/AdminColleges"
 import AdminDonors from "@/pages/admin/AdminDonors"
+import AdminTransactions from "@/pages/admin/AdminTransactions"
+import AdminSchedulers from "@/pages/admin/AdminSchedulers"
+import DonorSelectionPage from "@/pages/admin/DonorSelectionPage"
 
 import PaymentAllotmentPage from "@/pages/admin/PaymentAllotmentPage"
 import DonorMappingPage from "@/pages/admin/DonorMappingPage"
@@ -261,7 +264,7 @@ function App() {
         <Route path="/admin/students" element={
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
-              <AdminStudents initialTab="all" />
+              <AdminStudents />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
@@ -342,6 +345,30 @@ function App() {
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
               <AdminDonors />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/transactions" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminTransactions />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/schedulers" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <AdminSchedulers />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/donor-selection" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <DonorSelectionPage />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />
