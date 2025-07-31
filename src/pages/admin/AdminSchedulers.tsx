@@ -53,19 +53,6 @@ const mockSchedulers = [
     errorCount: 3
   },
   {
-    id: "SCH003",
-    name: "Donor Report Generation",
-    description: "Generate monthly reports for all donors",
-    frequency: "Monthly",
-    lastRun: "2024-02-01 00:00:00",
-    nextRun: "2024-03-01 00:00:00",
-    status: "Active",
-    type: "Reporting",
-    affectedCount: 15,
-    successCount: 15,
-    errorCount: 0
-  },
-  {
     id: "SCH004",
     name: "Receipt Validation",
     description: "Validate uploaded receipts and flag discrepancies",
@@ -78,19 +65,6 @@ const mockSchedulers = [
     successCount: 6,
     errorCount: 2
   },
-  {
-    id: "SCH005",
-    name: "College Status Update",
-    description: "Update college registration status based on compliance",
-    frequency: "Weekly",
-    lastRun: "2024-02-10 15:00:00",
-    nextRun: "2024-02-17 15:00:00",
-    status: "Active",
-    type: "College Management",
-    affectedCount: 12,
-    successCount: 10,
-    errorCount: 2
-  }
 ];
 
 const mockSchedulerHistory = [
@@ -117,18 +91,6 @@ const mockSchedulerHistory = [
     successCount: 22,
     errorCount: 3,
     details: "22 reminders sent successfully, 3 failed due to invalid email"
-  },
-  {
-    id: "HIST003",
-    schedulerId: "SCH003",
-    schedulerName: "Donor Report Generation",
-    runDate: "2024-02-01 00:00:00",
-    status: "Success",
-    duration: "10m 45s",
-    affectedCount: 15,
-    successCount: 15,
-    errorCount: 0,
-    details: "All 15 donor reports generated and emailed successfully"
   },
   {
     id: "HIST004",

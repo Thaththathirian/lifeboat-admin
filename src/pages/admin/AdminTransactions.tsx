@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight, RotateCcw, ArrowUpDown, Filter } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // TypeScript interfaces
 interface Donor {
@@ -90,6 +90,79 @@ const mockUnmappedTransactions = [
     studentId: "STU004",
     studentName: "Neha Patel",
     college: "Tech University"
+  }
+];
+
+// Mock data for reverted transactions (pairs of original and reverted transactions)
+const mockRevertedTransactions = [
+  {
+    originalTransaction: {
+      id: "TXN001",
+      amount: 50000,
+      totalAmount: 50000,
+      date: "2024-01-15",
+      description: "Scholarship Payment",
+      source: "Bank Transfer",
+      status: "Reverted",
+      studentId: "STU001",
+      studentName: "Rahul Kumar",
+      college: "ABC Engineering College",
+      type: "mapped",
+      mappingId: "MAP001",
+      donors: [
+        { donorId: "DON001", donorName: "John Doe", amount: 30000 },
+        { donorId: "DON002", donorName: "Sarah Wilson", amount: 20000 }
+      ],
+      revertDate: "2024-02-01",
+      revertReason: "Student requested refund due to course change"
+    },
+    revertedTransaction: {
+      id: "REV001",
+      amount: 50000,
+      totalAmount: 50000,
+      date: "2024-02-01",
+      description: "Reverted: Scholarship Payment",
+      source: "System Revert",
+      status: "Reverted",
+      studentId: "STU001",
+      studentName: "Rahul Kumar",
+      college: "ABC Engineering College",
+      type: "reverted",
+      revertDate: "2024-02-01",
+      revertReason: "Student requested refund due to course change"
+    }
+  },
+  {
+    originalTransaction: {
+      id: "TXN003",
+      amount: 60000,
+      totalAmount: 60000,
+      date: "2024-02-01",
+      description: "Scholarship Disbursement",
+      source: "Direct Credit",
+      status: "Reverted",
+      studentId: "STU003",
+      studentName: "Amit Verma",
+      college: "PQR Arts College",
+      type: "unmapped",
+      revertDate: "2024-02-15",
+      revertReason: "Duplicate transaction detected"
+    },
+    revertedTransaction: {
+      id: "REV002",
+      amount: 60000,
+      totalAmount: 60000,
+      date: "2024-02-15",
+      description: "Reverted: Scholarship Disbursement",
+      source: "System Revert",
+      status: "Reverted",
+      studentId: "STU003",
+      studentName: "Amit Verma",
+      college: "PQR Arts College",
+      type: "reverted",
+      revertDate: "2024-02-15",
+      revertReason: "Duplicate transaction detected"
+    }
   }
 ];
 
@@ -181,61 +254,45 @@ const mockMappedTransactions = [
 
 
 
-// TransactionRow component for expandable rows in "All Transactions" tab
-function TransactionRow({ transaction, onRevertTransaction }: { transaction: Transaction; onRevertTransaction: (transactionId: string, type: "unmapped" | "mapped") => void }) {
+// TransactionRow component for expandable rows in "All Transactions" tab (without revert action)
+function TransactionRow({ transaction }: { transaction: Transaction }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { toast } = useToast();
-
-  const handleRevert = (transactionId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent row expansion
-    onRevertTransaction(transactionId, transaction.type || "mapped"); // Handle unmapped transactions
-  };
 
   return (
     <>
       <TableRow 
-        className="cursor-pointer hover:bg-muted/50"
+        className="cursor-pointer hover:bg-muted/50 h-8"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <TableCell className="font-medium">{transaction.id}</TableCell>
-        <TableCell>
-          <div>{transaction.studentName}</div>
-          <div className="text-sm text-muted-foreground">{transaction.studentId}</div>
+        <TableCell className="font-medium py-1 text-sm">{transaction.id}</TableCell>
+        <TableCell className="py-1">
+          <div className="text-sm">{transaction.studentName}</div>
+          <div className="text-xs text-muted-foreground">{transaction.studentId}</div>
         </TableCell>
-        <TableCell>{transaction.college}</TableCell>
-        <TableCell>₹{transaction.totalAmount.toLocaleString()}</TableCell>
-        <TableCell>{transaction.date}</TableCell>
-                 <TableCell>{transaction.description}</TableCell>
-         <TableCell>
+        <TableCell className="py-1 text-sm">{transaction.college}</TableCell>
+        <TableCell className="py-1 text-sm">₹{transaction.totalAmount.toLocaleString()}</TableCell>
+        <TableCell className="py-1 text-sm">{transaction.date}</TableCell>
+                 <TableCell className="py-1 text-sm">{transaction.description}</TableCell>
+         <TableCell className="py-1">
           <div className="flex items-center gap-2">
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => handleRevert(transaction.id, e)}
-              className="h-6 px-2"
-                             disabled={false}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Revert
-            </Button>
           </div>
         </TableCell>
       </TableRow>
       {isExpanded && (
                  <TableRow>
            <TableCell colSpan={7} className="p-0">
-            <div className="bg-muted/30 p-6">
-                               <div className="border rounded-lg p-6 bg-background">
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-xl">Transaction: {transaction.id}</h4>
+            <div className="bg-muted/30 p-2">
+                               <div className="border rounded-lg p-3 bg-background">
+                <div className="mb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-medium text-base">Transaction: {transaction.id}</h4>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-muted-foreground">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-muted-foreground">
                     <div>
                       <span className="font-medium">Student:</span> {transaction.studentName} ({transaction.studentId})
                     </div>
@@ -247,7 +304,7 @@ function TransactionRow({ transaction, onRevertTransaction }: { transaction: Tra
                     </div>
                     <div>
                       <span className="font-medium">Total Amount:</span> 
-                      <span className="text-lg font-semibold text-green-600 ml-2">
+                      <span className="text-sm font-semibold text-green-600 ml-1">
                         ₹{transaction.totalAmount.toLocaleString()}
                       </span>
                     </div>
@@ -260,15 +317,15 @@ function TransactionRow({ transaction, onRevertTransaction }: { transaction: Tra
                       </div>
                     )}
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-2">
                     <span className="font-medium">Description:</span> {transaction.description}
                   </div>
                   {transaction.donors && transaction.donors.length > 0 && (
-                    <div className="mt-4">
+                    <div className="mt-2">
                       <span className="font-medium">Donors:</span>
-                      <div className="mt-2 space-y-2">
+                      <div className="mt-1 space-y-1">
                         {transaction.donors.map((donor: Donor, index: number) => (
-                          <div key={donor.donorId} className="flex justify-between items-center p-2 bg-muted rounded">
+                          <div key={donor.donorId} className="flex justify-between items-center p-1 bg-muted rounded text-xs">
                             <span>{donor.donorName} ({donor.donorId})</span>
                             <span className="font-medium">₹{donor.amount.toLocaleString()}</span>
                           </div>
@@ -283,6 +340,94 @@ function TransactionRow({ transaction, onRevertTransaction }: { transaction: Tra
           </TableCell>
         </TableRow>
       )}
+    </>
+  );
+}
+
+// RevertedTransactionRow component for reverted transaction pairs
+function RevertedTransactionRow({ pair }: { pair: { originalTransaction: Transaction; revertedTransaction: Transaction } }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <>
+             <TableRow 
+         className="cursor-pointer hover:bg-muted/50 h-8"
+         onClick={() => setIsExpanded(!isExpanded)}
+       >
+         <TableCell className="font-medium py-1">
+           <div className="flex items-center gap-2 text-sm">
+             <span className="text-red-600">{pair.originalTransaction.id}</span>
+             <span className="text-gray-400">→</span>
+             <span className="text-orange-600">{pair.revertedTransaction.id}</span>
+           </div>
+         </TableCell>
+         <TableCell className="py-1">
+           <div className="text-sm">{pair.originalTransaction.studentName}</div>
+           <div className="text-xs text-muted-foreground">{pair.originalTransaction.studentId}</div>
+         </TableCell>
+         <TableCell className="py-1 text-sm">{pair.originalTransaction.college}</TableCell>
+         <TableCell className="py-1 text-sm">₹{pair.originalTransaction.totalAmount.toLocaleString()}</TableCell>
+         <TableCell className="py-1 text-sm">{pair.originalTransaction.date}</TableCell>
+         <TableCell className="py-1 text-sm">{pair.originalTransaction.description}</TableCell>
+         <TableCell className="py-1">
+           <div className="flex items-center gap-2">
+             {isExpanded ? (
+               <ChevronDown className="h-4 w-4" />
+             ) : (
+               <ChevronRight className="h-4 w-4" />
+             )}
+           </div>
+         </TableCell>
+       </TableRow>
+                           {isExpanded && (
+          <TableRow>
+            <TableCell colSpan={7} className="p-0">
+              <div className="bg-muted/30 p-2">
+                <div className="border rounded-lg p-3 bg-background">
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-medium text-base">Reverted Transaction Pair</h4>
+                      <Badge variant="destructive">Reverted</Badge>
+                    </div>
+                    
+                    {/* Original Transaction */}
+                    <div className="mb-3 p-2 border-l-4 border-red-500 bg-red-50 rounded">
+                      <h5 className="font-medium text-red-800 mb-1 text-xs">Original Transaction: {pair.originalTransaction.id}</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                        <div><span className="font-medium">Student:</span> {pair.originalTransaction.studentName}</div>
+                        <div><span className="font-medium">College:</span> {pair.originalTransaction.college}</div>
+                        <div><span className="font-medium">Date:</span> {pair.originalTransaction.date}</div>
+                        <div><span className="font-medium">Amount:</span> ₹{pair.originalTransaction.totalAmount.toLocaleString()}</div>
+                        <div><span className="font-medium">Type:</span> {pair.originalTransaction.type === "unmapped" ? "Unmapped" : "Mapped"}</div>
+                        <div><span className="font-medium">Description:</span> {pair.originalTransaction.description}</div>
+                      </div>
+                    </div>
+
+                    {/* Reverted Transaction */}
+                    <div className="mb-2 p-2 border-l-4 border-orange-500 bg-orange-50 rounded">
+                      <h5 className="font-medium text-orange-800 mb-1 text-xs">Reverted Transaction: {pair.revertedTransaction.id}</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                        <div><span className="font-medium">Revert Date:</span> {pair.revertedTransaction.revertDate}</div>
+                        <div><span className="font-medium">Amount:</span> ₹{pair.revertedTransaction.totalAmount.toLocaleString()}</div>
+                        <div><span className="font-medium">Source:</span> {pair.revertedTransaction.source}</div>
+                        <div><span className="font-medium">Description:</span> {pair.revertedTransaction.description}</div>
+                      </div>
+                    </div>
+
+                    {/* Revert Information */}
+                    <div className="p-2 border-l-4 border-yellow-500 bg-yellow-50 rounded">
+                      <h5 className="font-medium text-yellow-800 mb-1 text-xs">Revert Information</h5>
+                      <div className="text-xs">
+                        <div><span className="font-medium">Reason:</span> {pair.originalTransaction.revertReason}</div>
+                        <div><span className="font-medium">Revert Date:</span> {pair.originalTransaction.revertDate}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TableCell>
+          </TableRow>
+        )}
     </>
   );
 }
@@ -303,14 +448,14 @@ function MappingRow({ mapping, onRevertTransaction }: { mapping: Mapping; onReve
   return (
     <>
       <TableRow 
-        className="cursor-pointer hover:bg-muted/50"
+        className="cursor-pointer hover:bg-muted/50 h-8"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <TableCell className="font-medium">{mapping.mappingId}</TableCell>
-        <TableCell>{mapping.mappingDate}</TableCell>
-        <TableCell>{mapping.transactions.length}</TableCell>
-        <TableCell>₹{totalAmount.toLocaleString()}</TableCell>
-                         <TableCell>
+        <TableCell className="font-medium py-1 text-sm">{mapping.mappingId}</TableCell>
+        <TableCell className="py-1 text-sm">{mapping.mappingDate}</TableCell>
+        <TableCell className="py-1 text-sm">{mapping.transactions.length}</TableCell>
+        <TableCell className="py-1 text-sm">₹{totalAmount.toLocaleString()}</TableCell>
+                         <TableCell className="py-1">
           <div className="flex items-center gap-2">
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
@@ -324,28 +469,28 @@ function MappingRow({ mapping, onRevertTransaction }: { mapping: Mapping; onReve
        </TableRow>
               {isExpanded && (
          <TableRow>
-           <TableCell colSpan={4} className="p-0">
-             <div className="bg-muted/30 p-6">
-               <div className="space-y-6">
+           <TableCell colSpan={5} className="p-0">
+             <div className="bg-muted/30 p-2">
+               <div className="space-y-2">
                  {mapping.transactions.map((transaction: Transaction) => (
-                                       <div key={transaction.id} className="border rounded-lg p-6 bg-background">
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-xl">Transaction: {transaction.id}</h4>
-                          <div className="flex items-center gap-3">
+                                       <div key={transaction.id} className="border rounded-lg p-3 bg-background">
+                      <div className="mb-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-medium text-base">Transaction: {transaction.id}</h4>
+                          <div className="flex items-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={(e) => handleRevert(transaction.id, e)}
-                              className="h-8 px-3"
+                              className="h-5 px-2 text-xs"
                               disabled={false}
                             >
-                              <RotateCcw className="h-4 w-4 mr-2" />
+                              <RotateCcw className="h-3 w-3 mr-1" />
                               Revert
                             </Button>
                           </div>
                         </div>
-                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-muted-foreground">
+                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-muted-foreground">
                          <div>
                            <span className="font-medium">Student:</span> {transaction.studentName} ({transaction.studentId})
                          </div>
@@ -357,12 +502,12 @@ function MappingRow({ mapping, onRevertTransaction }: { mapping: Mapping; onReve
                          </div>
                          <div>
                            <span className="font-medium">Total Amount:</span> 
-                           <span className="text-lg font-semibold text-green-600 ml-2">
+                           <span className="text-sm font-semibold text-green-600 ml-1">
                              ₹{transaction.totalAmount.toLocaleString()}
                            </span>
                          </div>
                        </div>
-                       <div className="mt-4">
+                       <div className="mt-2">
                          <span className="font-medium">Description:</span> {transaction.description}
                        </div>
 
@@ -380,8 +525,11 @@ function MappingRow({ mapping, onRevertTransaction }: { mapping: Mapping; onReve
 
 export default function AdminTransactions() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [filter, setFilter] = useState("");
-  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>(
+    location.state?.selectedTransactions?.map((t: Transaction) => t.id) || []
+  );
   const [revertDialog, setRevertDialog] = useState(false);
   const [transactionToRevert, setTransactionToRevert] = useState<string>("");
   const [revertReason, setRevertReason] = useState("");
@@ -394,9 +542,21 @@ export default function AdminTransactions() {
   const [mappedSortOrder, setMappedSortOrder] = useState<"asc" | "desc">("desc");
   const [allSortBy, setAllSortBy] = useState<string>("date");
   const [allSortOrder, setAllSortOrder] = useState<"asc" | "desc">("desc");
-  const [activeTab, setActiveTab] = useState<string>("unmapped");
-  
+  const [revertedSortBy, setRevertedSortBy] = useState<string>("revertDate");
+  const [revertedSortOrder, setRevertedSortOrder] = useState<"asc" | "desc">("desc");
+    const [activeTab, setActiveTab] = useState<string>(location.state?.activeTab || "all");
+
   const { toast } = useToast();
+
+  // Restore selected transactions when coming back from donor selection
+  useEffect(() => {
+    if (location.state?.selectedTransactions && location.state.returnToDonorSelection) {
+      setSelectedTransactions(location.state.selectedTransactions.map((t: Transaction) => t.id));
+    }
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
 
 
@@ -479,6 +639,22 @@ export default function AdminTransactions() {
     allSortOrder
   );
 
+  // Filter and sort reverted transactions
+  const filteredRevertedTransactions = sortData(
+    mockRevertedTransactions.filter(pair => {
+      const matchesSearch = 
+        pair.originalTransaction.studentName.toLowerCase().includes(filter.toLowerCase()) ||
+        pair.originalTransaction.id.toLowerCase().includes(filter.toLowerCase()) ||
+        pair.originalTransaction.college.toLowerCase().includes(filter.toLowerCase()) ||
+        pair.revertedTransaction.id.toLowerCase().includes(filter.toLowerCase()) ||
+        pair.originalTransaction.revertReason?.toLowerCase().includes(filter.toLowerCase());
+      
+      return matchesSearch;
+    }),
+    revertedSortBy,
+    revertedSortOrder
+  );
+
   const handleTransactionSelection = (transactionId: string, checked: boolean) => {
     if (checked) {
       setSelectedTransactions([...selectedTransactions, transactionId]);
@@ -510,9 +686,17 @@ export default function AdminTransactions() {
       selectedTransactions.includes(transaction.id)
     );
     
-    // Navigate to donor selection page with selected transactions
+    const navigationState = {
+      selectedTransactions: selectedTransactionObjects,
+      selectedDonors: location.state?.selectedDonors || [],
+      returnToDonorSelection: false
+    };
+    
+    console.log("Navigating to donor selection with state:", navigationState);
+    
+    // Navigate to donor selection page with selected transactions and preserve selected donors
     navigate("/admin/donor-selection", { 
-      state: { selectedTransactions: selectedTransactionObjects }
+      state: navigationState
     });
   };
 
@@ -564,164 +748,173 @@ export default function AdminTransactions() {
 
   return (
     <div className="main-content-container">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Transaction Management</h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold">Transaction Management</h2>
+          <Input
+            placeholder="Filter transactions..."
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="w-64"
+          />
+        </div>
         <div className="flex gap-2">
-          {selectedTransactions.length > 0 && (
-            <Button onClick={handleMapDonor}>
-              Map Donor ({selectedTransactions.length} selected)
-            </Button>
-          )}
+          <Button 
+            onClick={handleMapDonor}
+            disabled={selectedTransactions.length === 0}
+            className={selectedTransactions.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
+          >
+            Map Donor {selectedTransactions.length > 0 && `(${selectedTransactions.length} selected)`}
+          </Button>
           <Button variant="outline">Download Report</Button>
         </div>
       </div>
 
-             <div className="flex flex-col sm:flex-row gap-4 mb-6">
-         <div className="flex-1">
-           <Input
-             placeholder="Filter transactions..."
-             value={filter}
-             onChange={e => setFilter(e.target.value)}
-             className="max-w-md"
-           />
-         </div>
-         
-       </div>
-
                            <Tabs value={activeTab} className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all">
+              All Transactions ({filteredAllTransactions.length})
+            </TabsTrigger>
             <TabsTrigger value="unmapped">
               Unmapped Transactions ({filteredUnmapped.length})
             </TabsTrigger>
             <TabsTrigger value="mapped">
               Mapped Transactions ({filteredMapped.length})
             </TabsTrigger>
-            <TabsTrigger value="all">
-              All Transactions ({filteredAllTransactions.length})
+            <TabsTrigger value="reverted">
+              Reverted Transactions ({filteredRevertedTransactions.length})
             </TabsTrigger>
           </TabsList>
 
-        <TabsContent value="unmapped" className="mt-6">
+        <TabsContent value="unmapped" className="mt-4">
           <Card className="shadow-soft">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle>Unmapped Transactions</CardTitle>
+                <div className="flex items-center gap-4">
+                  <CardTitle className="text-lg">Unmapped Transactions</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Total:</span>
+                    <Badge variant="default" className="bg-green-100 text-green-800 font-semibold text-sm px-2 py-1">
+                      ₹{filteredUnmapped.reduce((sum, transaction) => sum + transaction.amount, 0).toLocaleString()}
+                    </Badge>
+                  </div>
+                </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     checked={selectedTransactions.length === filteredUnmapped.length && filteredUnmapped.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
-                  <Label>Select All</Label>
+                  <Label className="text-sm">Select All</Label>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
                              <Table>
                  <TableHeader>
-                   <TableRow>
-                     <TableHead className="w-12">
+                   <TableRow className="h-8">
+                     <TableHead className="w-8">
                        <Checkbox
                          checked={selectedTransactions.length === filteredUnmapped.length && filteredUnmapped.length > 0}
                          onCheckedChange={handleSelectAll}
                        />
                      </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setUnmappedSortBy("id");
                             setUnmappedSortOrder(unmappedSortBy === "id" && unmappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Transaction ID
                           {unmappedSortBy === "id" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setUnmappedSortBy("studentName");
                             setUnmappedSortOrder(unmappedSortBy === "studentName" && unmappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Student
                           {unmappedSortBy === "studentName" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setUnmappedSortBy("college");
                             setUnmappedSortOrder(unmappedSortBy === "college" && unmappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           College
                           {unmappedSortBy === "college" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setUnmappedSortBy("amount");
                             setUnmappedSortOrder(unmappedSortBy === "amount" && unmappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Amount
                           {unmappedSortBy === "amount" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setUnmappedSortBy("date");
                             setUnmappedSortOrder(unmappedSortBy === "date" && unmappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Date
                           {unmappedSortBy === "date" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                                                                       <TableHead>
+                                                                                       <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setUnmappedSortBy("description");
                             setUnmappedSortOrder(unmappedSortBy === "description" && unmappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Description
                           {unmappedSortBy === "description" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="text-sm">Actions</TableHead>
                    </TableRow>
                  </TableHeader>
                 <TableBody>
                   {filteredUnmapped.map(transaction => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>
+                    <TableRow key={transaction.id} className="h-8">
+                      <TableCell className="py-1">
                         <Checkbox
                           checked={selectedTransactions.includes(transaction.id)}
                           onCheckedChange={(checked) => 
@@ -729,21 +922,21 @@ export default function AdminTransactions() {
                           }
                         />
                       </TableCell>
-                      <TableCell>{transaction.id}</TableCell>
-                      <TableCell>
-                        <div>{transaction.studentName}</div>
-                        <div className="text-sm text-muted-foreground">{transaction.studentId}</div>
+                      <TableCell className="py-1 text-sm">{transaction.id}</TableCell>
+                      <TableCell className="py-1">
+                        <div className="text-sm">{transaction.studentName}</div>
+                        <div className="text-xs text-muted-foreground">{transaction.studentId}</div>
                       </TableCell>
-                      <TableCell>{transaction.college}</TableCell>
-                      <TableCell>₹{transaction.amount.toLocaleString()}</TableCell>
-                      <TableCell>{transaction.date}</TableCell>
-                                             <TableCell>{transaction.description}</TableCell>
-                       <TableCell>
+                      <TableCell className="py-1 text-sm">{transaction.college}</TableCell>
+                      <TableCell className="py-1 text-sm">₹{transaction.amount.toLocaleString()}</TableCell>
+                      <TableCell className="py-1 text-sm">{transaction.date}</TableCell>
+                                             <TableCell className="py-1 text-sm">{transaction.description}</TableCell>
+                       <TableCell className="py-1">
                          <Button
                            variant="outline"
                            size="sm"
                            onClick={() => handleRevertTransaction(transaction.id, "unmapped")}
-                           className="h-6 px-2"
+                           className="h-5 px-2 text-xs"
                          >
                            <RotateCcw className="h-3 w-3 mr-1" />
                            Revert
@@ -757,76 +950,76 @@ export default function AdminTransactions() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="mapped" className="mt-6">
+        <TabsContent value="mapped" className="mt-4">
           <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle>Mapped Transactions</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Mapped Transactions</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
                              <Table>
                  <TableHeader>
-                   <TableRow>
-                                           <TableHead>
+                   <TableRow className="h-8">
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setMappedSortBy("mappingId");
                             setMappedSortOrder(mappedSortBy === "mappingId" && mappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Mapping ID
                           {mappedSortBy === "mappingId" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setMappedSortBy("mappingDate");
                             setMappedSortOrder(mappedSortBy === "mappingDate" && mappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Mapping Date
                           {mappedSortBy === "mappingDate" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setMappedSortBy("transactionCount");
                             setMappedSortOrder(mappedSortBy === "transactionCount" && mappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Total Transactions
                           {mappedSortBy === "transactionCount" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setMappedSortBy("totalAmount");
                             setMappedSortOrder(mappedSortBy === "totalAmount" && mappedSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Total Amount
                           {mappedSortBy === "totalAmount" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                     <TableHead>Actions</TableHead>
+                     <TableHead className="text-sm">Actions</TableHead>
                    </TableRow>
                  </TableHeader>
                                    <TableBody>
@@ -843,106 +1036,106 @@ export default function AdminTransactions() {
           </Card>
                  </TabsContent>
 
-         <TabsContent value="all" className="mt-6">
+         <TabsContent value="all" className="mt-4">
            <Card className="shadow-soft">
-             <CardHeader>
-               <CardTitle>All Transactions</CardTitle>
+             <CardHeader className="pb-3">
+               <CardTitle className="text-lg">All Transactions</CardTitle>
              </CardHeader>
-             <CardContent>
+             <CardContent className="pt-0">
                <Table>
                  <TableHeader>
-                   <TableRow>
-                                           <TableHead>
+                   <TableRow className="h-8">
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setAllSortBy("id");
                             setAllSortOrder(allSortBy === "id" && allSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Transaction ID
                           {allSortBy === "id" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setAllSortBy("studentName");
                             setAllSortOrder(allSortBy === "studentName" && allSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Student
                           {allSortBy === "studentName" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setAllSortBy("college");
                             setAllSortOrder(allSortBy === "college" && allSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           College
                           {allSortBy === "college" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setAllSortBy("amount");
                             setAllSortOrder(allSortBy === "amount" && allSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Amount
                           {allSortBy === "amount" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setAllSortBy("date");
                             setAllSortOrder(allSortBy === "date" && allSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Date
                           {allSortBy === "date" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                                           <TableHead>
+                                           <TableHead className="text-sm">
                         <Button
                           variant="ghost"
                           onClick={() => {
                             setAllSortBy("description");
                             setAllSortOrder(allSortBy === "description" && allSortOrder === "asc" ? "desc" : "asc");
                           }}
-                          className="h-auto p-0 font-medium"
+                          className="h-auto p-0 font-medium text-xs"
                         >
                           Description
                           {allSortBy === "description" && (
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            <ArrowUpDown className="ml-1 h-3 w-3" />
                           )}
                         </Button>
                       </TableHead>
-                     <TableHead>Actions</TableHead>
+                     <TableHead className="text-sm">Actions</TableHead>
                    </TableRow>
                  </TableHeader>
                  <TableBody>
@@ -950,11 +1143,248 @@ export default function AdminTransactions() {
                      <TransactionRow 
                        key={transaction.id} 
                        transaction={transaction} 
-                       onRevertTransaction={handleRevertTransaction}
                      />
                    ))}
                  </TableBody>
                </Table>
+             </CardContent>
+           </Card>
+         </TabsContent>
+
+                  <TabsContent value="reverted" className="mt-4">
+           <Card className="shadow-soft">
+             <CardHeader className="pb-3">
+               <CardTitle className="text-lg">Reverted Transactions</CardTitle>
+             </CardHeader>
+             <CardContent className="pt-0">
+               <Tabs defaultValue="mapped" className="w-full">
+                 <TabsList className="grid w-full grid-cols-2">
+                   <TabsTrigger value="mapped">
+                     Mapped Reverted ({filteredRevertedTransactions.filter(pair => pair.originalTransaction.type === "mapped").length})
+                   </TabsTrigger>
+                   <TabsTrigger value="unmapped">
+                     Unmapped Reverted ({filteredRevertedTransactions.filter(pair => pair.originalTransaction.type === "unmapped").length})
+                   </TabsTrigger>
+                 </TabsList>
+
+                 <TabsContent value="mapped" className="mt-4">
+                   <Table>
+                     <TableHeader>
+                       <TableRow className="h-8">
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("id");
+                               setRevertedSortOrder(revertedSortBy === "id" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Transaction Pair
+                             {revertedSortBy === "id" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("studentName");
+                               setRevertedSortOrder(revertedSortBy === "studentName" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Student
+                             {revertedSortBy === "studentName" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("college");
+                               setRevertedSortOrder(revertedSortBy === "college" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             College
+                             {revertedSortBy === "college" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("amount");
+                               setRevertedSortOrder(revertedSortBy === "amount" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Amount
+                             {revertedSortBy === "amount" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("date");
+                               setRevertedSortOrder(revertedSortBy === "date" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Date
+                             {revertedSortBy === "date" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("description");
+                               setRevertedSortOrder(revertedSortBy === "description" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Description
+                             {revertedSortBy === "description" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody>
+                       {filteredRevertedTransactions
+                         .filter(pair => pair.originalTransaction.type === "mapped")
+                         .map((pair, index) => (
+                           <RevertedTransactionRow 
+                             key={`${pair.originalTransaction.id}-${pair.revertedTransaction.id}`} 
+                             pair={pair} 
+                           />
+                         ))}
+                     </TableBody>
+                   </Table>
+                 </TabsContent>
+
+                 <TabsContent value="unmapped" className="mt-4">
+                   <Table>
+                     <TableHeader>
+                       <TableRow className="h-8">
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("id");
+                               setRevertedSortOrder(revertedSortBy === "id" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Transaction Pair
+                             {revertedSortBy === "id" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("studentName");
+                               setRevertedSortOrder(revertedSortBy === "studentName" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Student
+                             {revertedSortBy === "studentName" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("college");
+                               setRevertedSortOrder(revertedSortBy === "college" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             College
+                             {revertedSortBy === "college" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("amount");
+                               setRevertedSortOrder(revertedSortBy === "amount" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Amount
+                             {revertedSortBy === "amount" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("date");
+                               setRevertedSortOrder(revertedSortBy === "date" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Date
+                             {revertedSortBy === "date" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                         <TableHead className="text-sm">
+                           <Button
+                             variant="ghost"
+                             onClick={() => {
+                               setRevertedSortBy("description");
+                               setRevertedSortOrder(revertedSortBy === "description" && revertedSortOrder === "asc" ? "desc" : "asc");
+                             }}
+                             className="h-auto p-0 font-medium text-xs"
+                           >
+                             Description
+                             {revertedSortBy === "description" && (
+                               <ArrowUpDown className="ml-1 h-3 w-3" />
+                             )}
+                           </Button>
+                         </TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody>
+                       {filteredRevertedTransactions
+                         .filter(pair => pair.originalTransaction.type === "unmapped")
+                         .map((pair, index) => (
+                           <RevertedTransactionRow 
+                             key={`${pair.originalTransaction.id}-${pair.revertedTransaction.id}`} 
+                             pair={pair} 
+                           />
+                         ))}
+                     </TableBody>
+                   </Table>
+                 </TabsContent>
+               </Tabs>
              </CardContent>
            </Card>
          </TabsContent>

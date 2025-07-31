@@ -123,7 +123,8 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
           variant={isActive ? "default" : "ghost"}
           className={cn(
             level > 0 ? "nav-item-child" : "nav-item",
-            isActive && "bg-primary text-primary-foreground"
+            isActive && "bg-primary text-primary-foreground",
+            "min-h-[44px] flex-shrink-0"
           )}
           onClick={() => {
             if (hasChildren) {

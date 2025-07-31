@@ -207,19 +207,21 @@ All colors MUST be HSL.
 
   /* Navigation Utilities */
   .nav-item {
-    @apply w-full justify-start gap-3 h-auto transition-smooth;
+    @apply w-full justify-start gap-3 h-auto transition-smooth flex-shrink-0;
     padding-left: var(--nav-item-padding-x);
     padding-right: var(--nav-item-padding-x);
     padding-top: var(--nav-item-padding-y);
     padding-bottom: var(--nav-item-padding-y);
+    min-height: 44px;
   }
 
   .nav-item-child {
-    @apply w-full justify-start gap-3 h-auto transition-smooth;
+    @apply w-full justify-start gap-3 h-auto transition-smooth flex-shrink-0;
     padding-left: calc(var(--nav-item-padding-x) + 1rem);
     padding-right: var(--nav-item-padding-x);
     padding-top: var(--nav-item-padding-y);
     padding-bottom: var(--nav-item-padding-y);
+    min-height: 44px;
   }
 
   /* Transition Utilities */

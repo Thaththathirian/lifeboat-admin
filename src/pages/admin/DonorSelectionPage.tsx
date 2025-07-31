@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Search, Users, CreditCard, AlertCircle } from "lucide-react";
+import { ArrowLeft, Search, Users, CreditCard, AlertCircle, Edit } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // TypeScript interfaces
@@ -35,7 +35,7 @@ interface Donor {
 // Mock data for available donors
 const mockAvailableDonors = [
   { id: "DON001", name: "John Doe", unallocatedAmount: 50000, email: "john.doe@email.com" },
-  { id: "DON002", name: "Sarah Wilson", unallocatedAmount: 0, email: "sarah.wilson@email.com" },
+  { id: "DON002", name: "Sarah Wilson", unallocatedAmount: 1520, email: "sarah.wilson@email.com" },
   { id: "DON003", name: "Amit Patel", unallocatedAmount: 75000, email: "amit.patel@email.com" },
   { id: "DON004", name: "Priya Sharma", unallocatedAmount: 80000, email: "priya.sharma@email.com" },
   { id: "DON005", name: "Rajesh Kumar", unallocatedAmount: 120000, email: "rajesh.kumar@email.com" },
@@ -53,10 +53,18 @@ export default function DonorSelectionPage() {
   
   // Get selected transactions from navigation state
   const selectedTransactions = location.state?.selectedTransactions || [];
-  const [selectedDonors, setSelectedDonors] = useState<string[]>([]);
+  const [selectedDonors, setSelectedDonors] = useState<string[]>(location.state?.selectedDonors || []);
   const [searchFilter, setSearchFilter] = useState("");
-  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Restore selected donors when coming back from transactions page
+  useEffect(() => {
+    console.log("Location state:", location.state);
+    if (location.state?.selectedDonors && location.state.selectedDonors.length > 0) {
+      console.log("Restoring selected donors:", location.state.selectedDonors);
+      setSelectedDonors(location.state.selectedDonors);
+    }
+  }, [location.state?.selectedDonors]);
 
   // Calculate total transaction amount
   const totalTransactionAmount = selectedTransactions.reduce((total: number, transaction: Transaction) => {
@@ -69,14 +77,12 @@ export default function DonorSelectionPage() {
     return total + (donor?.unallocatedAmount || 0);
   }, 0);
 
-  // Filter donors based on search and availability
+  // Filter donors based on search
   const filteredDonors = mockAvailableDonors.filter(donor => {
     const matchesSearch = donor.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
       donor.email.toLowerCase().includes(searchFilter.toLowerCase());
     
-    const matchesAvailability = !showOnlyAvailable || donor.unallocatedAmount > 0;
-    
-    return matchesSearch && matchesAvailability;
+    return matchesSearch;
   });
 
   const handleDonorSelection = (donorId: string, checked: boolean) => {
@@ -160,97 +166,65 @@ export default function DonorSelectionPage() {
     <div className="main-content-container">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Transactions
-          </Button>
-          <h2 className="text-2xl font-bold">Select Donors for Mapping</h2>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleCreateMapping}
-            disabled={selectedDonors.length === 0 || totalUnallocatedAmount < totalTransactionAmount}
-          >
-            Create Mapping ({selectedDonors.length} donors)
-          </Button>
+          <h2 className="text-2xl font-bold">Donor Payment Mapping</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Unallocated Amount:</span>
+              <Badge variant="default" className="bg-green-100 text-green-800 font-semibold text-sm px-2 py-1">
+                ₹{mockAvailableDonors.reduce((total, donor) => total + donor.unallocatedAmount, 0).toLocaleString()}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Transaction Amount:</span>
+              <Badge variant="default" className="bg-purple-100 text-purple-800 font-semibold text-sm px-2 py-1">
+                ₹{totalTransactionAmount.toLocaleString()}
+              </Badge>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Selected Transactions</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-blue-600" />
-              <div>
-                <div className="text-3xl font-bold text-blue-600">₹{totalTransactionAmount.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">{selectedTransactions.length} Transactions</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Selected Donors</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-green-600" />
-              <div>
-                <div className="text-3xl font-bold text-green-600">₹{totalUnallocatedAmount.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">{selectedDonors.length} Donors</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className={`shadow-soft ${totalUnallocatedAmount >= totalTransactionAmount ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Fund Status</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <div className={`h-4 w-4 rounded-full ${totalUnallocatedAmount >= totalTransactionAmount ? 'bg-green-600' : 'bg-red-600'}`} />
-              <div>
-                <div className={`text-3xl font-bold ${totalUnallocatedAmount >= totalTransactionAmount ? 'text-green-600' : 'text-red-600'}`}>
-                  {totalUnallocatedAmount >= totalTransactionAmount ? 'Sufficient' : 'Insufficient'}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {totalUnallocatedAmount >= totalTransactionAmount 
-                    ? `Surplus: ₹${(totalUnallocatedAmount - totalTransactionAmount).toLocaleString()}`
-                    : `Shortfall: ₹${(totalTransactionAmount - totalUnallocatedAmount).toLocaleString()}`
-                  }
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+
 
       {/* Available Donors Table */}
       <Card className="shadow-soft mb-6">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Available Donors</CardTitle>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="show-only-available"
-                  checked={showOnlyAvailable}
-                  onCheckedChange={(checked) => setShowOnlyAvailable(checked as boolean)}
-                />
-                <Label htmlFor="show-only-available">Show only available donors</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={selectedDonors.length === filteredDonors.length && filteredDonors.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-                <Label>Select All</Label>
+            <CardTitle>Available Donors ({filteredDonors.length})</CardTitle>
+                         <div className="flex items-center gap-4">
+               <div className="flex gap-2">
+                                                                                                                                       <Button 
+                     onClick={() => navigate("/admin/transactions", { 
+                       state: { 
+                         selectedTransactions: selectedTransactions,
+                         returnToDonorSelection: true,
+                         selectedDonors: selectedDonors,
+                         activeTab: "unmapped"
+                       } 
+                     })}
+                     className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg px-6 py-6 leading-tight"
+                   >
+                     <Edit className="h-5 w-5 mr-3" />
+                     Edit Transactions
+                   </Button>
+                                                                   <Button 
+                    onClick={handleCreateMapping}
+                    className={`px-6 py-6 text-lg font-semibold text-white leading-tight ${
+                      selectedDonors.length === 0 
+                        ? 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed' 
+                        : totalUnallocatedAmount >= totalTransactionAmount 
+                          ? 'bg-green-600 hover:bg-green-700' 
+                          : 'bg-red-600 hover:bg-red-700'
+                    }`}
+                  >
+                    <CreditCard className="h-5 w-5 mr-3" />
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-lg font-bold leading-none">₹{totalUnallocatedAmount.toLocaleString()}</span>
+                      <span className="text-sm leading-none">Map Payments</span>
+                    </div>
+                  </Button>
               </div>
             </div>
           </div>
@@ -272,12 +246,19 @@ export default function DonorSelectionPage() {
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Donor ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Unallocated Amount</TableHead>
-                  <TableHead>Status</TableHead>
+                                      <TableHead className="w-12">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={selectedDonors.length === filteredDonors.length && filteredDonors.length > 0}
+                          onCheckedChange={handleSelectAll}
+                        />
+                        <span className="text-xs text-muted-foreground">All</span>
+                      </div>
+                    </TableHead>
+                  <TableHead className="text-center">Donor ID</TableHead>
+                  <TableHead className="text-center">Name</TableHead>
+                  <TableHead className="text-center">Email</TableHead>
+                  <TableHead className="text-center">Unallocated Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -291,14 +272,17 @@ export default function DonorSelectionPage() {
                         }
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{donor.id}</TableCell>
-                    <TableCell>{donor.name}</TableCell>
-                    <TableCell>{donor.email}</TableCell>
-                    <TableCell>₹{donor.unallocatedAmount.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Badge variant={donor.unallocatedAmount > 0 ? "default" : "secondary"}>
-                        {donor.unallocatedAmount > 0 ? "Available" : "No Funds"}
-                      </Badge>
+                    <TableCell className="font-medium text-center">{donor.id}</TableCell>
+                    <TableCell className="text-center">{donor.name}</TableCell>
+                    <TableCell className="text-center">{donor.email}</TableCell>
+                    <TableCell className="text-center">
+                      {donor.unallocatedAmount > 0 ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800 font-semibold">
+                          ₹{donor.unallocatedAmount.toLocaleString()}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">₹{donor.unallocatedAmount.toLocaleString()}</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -308,47 +292,7 @@ export default function DonorSelectionPage() {
         </CardContent>
       </Card>
 
-      {/* Selected Transactions Table */}
-      <Card className="shadow-soft">
-        <CardHeader>
-          <CardTitle>Selected Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-64 overflow-y-auto border rounded-md">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background z-10">
-                <TableRow>
-                  <TableHead>Transaction ID</TableHead>
-                  <TableHead>Student</TableHead>
-                  <TableHead>College</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {selectedTransactions.map((transaction: Transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">{transaction.id}</TableCell>
-                    <TableCell>
-                      <div>{transaction.studentName}</div>
-                      <div className="text-sm text-muted-foreground">{transaction.studentId}</div>
-                    </TableCell>
-                    <TableCell>{transaction.college}</TableCell>
-                    <TableCell>₹{transaction.amount.toLocaleString()}</TableCell>
-                    <TableCell>{transaction.date}</TableCell>
-                    <TableCell>{transaction.description}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{transaction.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>

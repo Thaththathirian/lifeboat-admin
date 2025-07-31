@@ -396,22 +396,22 @@ export default function DonorMappingPage() {
     );
 
     if (transactionSortBy) {
-      filtered.sort((a, b) => {
-        const aValue = a[transactionSortBy];
-        const bValue = b[transactionSortBy];
-        
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return transactionSortDir === 'asc' 
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
-        }
-        
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return transactionSortDir === 'asc' ? aValue - bValue : bValue - aValue;
-        }
-        
-        return 0;
-      });
+    filtered.sort((a, b) => {
+      const aValue = a[transactionSortBy];
+      const bValue = b[transactionSortBy];
+      
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return transactionSortDir === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return transactionSortDir === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      return 0;
+    });
     } else {
       // Default sorting by amount (highest to lowest)
       filtered.sort((a, b) => b.amount - a.amount);
@@ -421,11 +421,11 @@ export default function DonorMappingPage() {
   };
 
   const handleSort = (field: string) => {
-    if (transactionSortBy === field) {
-      setTransactionSortDir(transactionSortDir === 'asc' ? 'desc' : 'asc');
-    } else {
+      if (transactionSortBy === field) {
+        setTransactionSortDir(transactionSortDir === 'asc' ? 'desc' : 'asc');
+      } else {
       setTransactionSortBy(field as keyof any);
-      setTransactionSortDir('asc');
+        setTransactionSortDir('asc');
     }
   };
 
@@ -452,53 +452,53 @@ export default function DonorMappingPage() {
           <div className="bg-green-100 border border-green-200 rounded-lg px-4 py-2">
             <div className="text-sm text-green-700">Unallocated Amount</div>
             <div className="text-xl font-bold text-green-800">₹{getTotalUnallocatedAmount().toLocaleString()}</div>
-          </div>
+        </div>
           <div className="bg-purple-100 border border-purple-200 rounded-lg px-4 py-2">
             <div className="text-sm text-purple-700">All Transaction Amount</div>
             <div className="text-xl font-bold text-purple-800">₹{getTotalUnmappedAmount().toLocaleString()}</div>
           </div>
         </div>
-      </div>
+             </div>
 
-      {/* Insufficient Funds Warning */}
+       {/* Insufficient Funds Warning */}
       {selectedTransactions.length > 0 && getSelectedTransactionsAmount() > getMappingAmount() && (
-        <Card className="mb-6 border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-red-600" />
-                </div>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-red-800">Insufficient Funds</h3>
-                <p className="text-red-700">
+         <Card className="mb-6 border-red-200 bg-red-50">
+           <CardContent className="p-4">
+             <div className="flex items-center gap-3">
+               <div className="flex-shrink-0">
+                 <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                   <DollarSign className="h-5 w-5 text-red-600" />
+                 </div>
+               </div>
+               <div className="flex-1">
+                 <h3 className="text-lg font-semibold text-red-800">Insufficient Funds</h3>
+                 <p className="text-red-700">
                   Selected transactions (₹{getSelectedTransactionsAmount().toLocaleString()}) exceed available mapping amount (₹{getMappingAmount().toLocaleString()}). 
                   Please select fewer transactions or go back and select more donors.
-                </p>
-                <div className="mt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate('/admin/donors', { state: { selectedDonors: selectedDonorIds } })}
-                    className="border-red-300 text-red-700 hover:bg-red-100"
-                  >
-                    ← Back to Donors
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                 </p>
+                 <div className="mt-2">
+                   <Button 
+                     variant="outline" 
+                     onClick={() => navigate('/admin/donors', { state: { selectedDonors: selectedDonorIds } })}
+                     className="border-red-300 text-red-700 hover:bg-red-100"
+                   >
+                     ← Back to Donors
+                   </Button>
+                 </div>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+       )}
 
       {/* Unmapped Transactions Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Unmapped Transactions ({filteredTransactions.length})
-            </CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Unmapped Transactions ({filteredTransactions.length})
+          </CardTitle>
             <div className="flex items-center gap-4">
               <div className="bg-blue-100 border border-blue-200 rounded-lg px-4 py-2">
                 <div className="text-sm text-blue-700">Mapping Amount</div>
@@ -589,7 +589,7 @@ export default function DonorMappingPage() {
                     >
                       Transaction ID
                       {transactionSortBy === 'id' && (
-                        <ArrowUpDown className="h-4 w-4" />
+                      <ArrowUpDown className="h-4 w-4" />
                       )}
                     </Button>
                   </TableHead>
@@ -601,7 +601,7 @@ export default function DonorMappingPage() {
                     >
                       Student ID
                       {transactionSortBy === 'studentId' && (
-                        <ArrowUpDown className="h-4 w-4" />
+                      <ArrowUpDown className="h-4 w-4" />
                       )}
                     </Button>
                   </TableHead>
@@ -613,7 +613,7 @@ export default function DonorMappingPage() {
                     >
                       Student Name
                       {transactionSortBy === 'studentName' && (
-                        <ArrowUpDown className="h-4 w-4" />
+                      <ArrowUpDown className="h-4 w-4" />
                       )}
                     </Button>
                   </TableHead>
@@ -625,7 +625,7 @@ export default function DonorMappingPage() {
                     >
                       College
                       {transactionSortBy === 'college' && (
-                        <ArrowUpDown className="h-4 w-4" />
+                      <ArrowUpDown className="h-4 w-4" />
                       )}
                     </Button>
                   </TableHead>
@@ -637,7 +637,7 @@ export default function DonorMappingPage() {
                     >
                       Amount
                       {transactionSortBy === 'amount' && (
-                        <ArrowUpDown className="h-4 w-4" />
+                      <ArrowUpDown className="h-4 w-4" />
                       )}
                     </Button>
                   </TableHead>
@@ -649,7 +649,7 @@ export default function DonorMappingPage() {
                     >
                       Date
                       {transactionSortBy === 'date' && (
-                        <ArrowUpDown className="h-4 w-4" />
+                      <ArrowUpDown className="h-4 w-4" />
                       )}
                     </Button>
                   </TableHead>
@@ -691,38 +691,38 @@ export default function DonorMappingPage() {
         </CardContent>
       </Card>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-blue-600" />
-              Confirm Payment Mapping
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader className="pb-2">
+             {/* Confirmation Dialog */}
+       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+           <DialogHeader>
+             <DialogTitle className="flex items-center gap-2">
+               <AlertTriangle className="h-5 w-5 text-blue-600" />
+               Confirm Payment Mapping
+             </DialogTitle>
+           </DialogHeader>
+           
+           <div className="space-y-6">
+             {/* Summary Cards */}
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <Card className="border-blue-200 bg-blue-50">
+                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs font-medium text-blue-700">Selected Transactions</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
+                 </CardHeader>
+                 <CardContent className="pt-0">
                   <div className="text-2xl font-bold text-blue-700">₹{getSelectedTransactionsAmount().toLocaleString()}</div>
                   <div className="text-xs text-blue-600">{selectedTransactions.length} Transactions</div>
-                </CardContent>
-              </Card>
+                 </CardContent>
+               </Card>
 
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader className="pb-2">
+               <Card className="border-green-200 bg-green-50">
+                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs font-medium text-green-700">Available Amount</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
+                 </CardHeader>
+                 <CardContent className="pt-0">
                   <div className="text-2xl font-bold text-green-700">₹{getMappingAmount().toLocaleString()}</div>
                   <div className="text-xs text-green-600">{donors.length} Donors</div>
-                </CardContent>
-              </Card>
+                 </CardContent>
+               </Card>
 
               <Card className={`${
                 getSelectedTransactionsAmount() < getMappingAmount() 
@@ -731,10 +731,10 @@ export default function DonorMappingPage() {
                   ? 'border-blue-200 bg-blue-50'
                   : 'border-red-200 bg-red-50'
               }`}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-medium">Status</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
+                 <CardHeader className="pb-2">
+                   <CardTitle className="text-xs font-medium">Status</CardTitle>
+                 </CardHeader>
+                 <CardContent className="pt-0">
                   <div className={`text-2xl font-bold ${
                     getSelectedTransactionsAmount() < getMappingAmount() 
                       ? 'text-green-700' 
@@ -748,34 +748,34 @@ export default function DonorMappingPage() {
                       ? 'Exact Match'
                       : 'Insufficient'
                     }
-                  </div>
-                  <div className="text-xs text-muted-foreground">
+                   </div>
+                   <div className="text-xs text-muted-foreground">
                     {getSelectedTransactionsAmount() < getMappingAmount() 
                       ? `Surplus: ₹${(getMappingAmount() - getSelectedTransactionsAmount()).toLocaleString()}`
                       : getSelectedTransactionsAmount() === getMappingAmount()
                       ? 'Perfect Match'
                       : `Shortfall: ₹${(getSelectedTransactionsAmount() - getMappingAmount()).toLocaleString()}`
-                    }
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                     }
+                   </div>
+                 </CardContent>
+               </Card>
+             </div>
 
-            {/* Selected Donors */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-green-700">Selected Donors</h3>
-              <div className="max-h-48 overflow-y-auto border rounded-md">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
-                    <TableRow>
-                      <TableHead>Donor ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Total Donated</TableHead>
-                      <TableHead>Allocated</TableHead>
-                      <TableHead>Unallocated Amount</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+             {/* Selected Donors */}
+             <div>
+               <h3 className="text-lg font-semibold mb-3 text-green-700">Selected Donors</h3>
+               <div className="max-h-48 overflow-y-auto border rounded-md">
+                 <Table>
+                   <TableHeader className="sticky top-0 bg-background z-10">
+                     <TableRow>
+                       <TableHead>Donor ID</TableHead>
+                       <TableHead>Name</TableHead>
+                       <TableHead>Total Donated</TableHead>
+                       <TableHead>Allocated</TableHead>
+                       <TableHead>Unallocated Amount</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
                     {donors.map(donor => (
                       <TableRow key={donor.donorId} className={donor.isBlocked ? "bg-red-50" : ""}>
                         <TableCell className="font-medium">{donor.donorId}</TableCell>
@@ -783,103 +783,103 @@ export default function DonorMappingPage() {
                         <TableCell>₹{donor.totalDonated.toLocaleString()}</TableCell>
                         <TableCell>₹{donor.studentMappings.reduce((sum: number, mapping: any) => sum + mapping.amount, 0).toLocaleString()}</TableCell>
                         <TableCell>₹{getUnallocatedAmount(donor).toLocaleString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               </div>
+             </div>
 
-            {/* Selected Transactions */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-blue-700">Selected Transactions</h3>
-              <div className="max-h-48 overflow-y-auto border rounded-md">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
-                    <TableRow>
-                      <TableHead>Transaction ID</TableHead>
-                      <TableHead>Student</TableHead>
-                      <TableHead>College</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+             {/* Selected Transactions */}
+             <div>
+               <h3 className="text-lg font-semibold mb-3 text-blue-700">Selected Transactions</h3>
+               <div className="max-h-48 overflow-y-auto border rounded-md">
+                 <Table>
+                   <TableHeader className="sticky top-0 bg-background z-10">
+                     <TableRow>
+                       <TableHead>Transaction ID</TableHead>
+                       <TableHead>Student</TableHead>
+                       <TableHead>College</TableHead>
+                       <TableHead>Amount</TableHead>
+                       <TableHead>Date</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
                     {filteredTransactions.filter(transaction => selectedTransactions.includes(transaction.id)).map(transaction => (
-                      <TableRow key={transaction.id}>
-                        <TableCell className="font-medium">{transaction.id}</TableCell>
-                        <TableCell>
-                          <div>{transaction.studentName}</div>
-                          <div className="text-sm text-muted-foreground">{transaction.studentId}</div>
-                        </TableCell>
-                        <TableCell>{transaction.college}</TableCell>
-                        <TableCell>₹{transaction.amount.toLocaleString()}</TableCell>
-                        <TableCell>{transaction.date}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+                       <TableRow key={transaction.id}>
+                         <TableCell className="font-medium">{transaction.id}</TableCell>
+                         <TableCell>
+                           <div>{transaction.studentName}</div>
+                           <div className="text-sm text-muted-foreground">{transaction.studentId}</div>
+                         </TableCell>
+                         <TableCell>{transaction.college}</TableCell>
+                         <TableCell>₹{transaction.amount.toLocaleString()}</TableCell>
+                         <TableCell>{transaction.date}</TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               </div>
+             </div>
 
-            {/* Warning Message */}
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                <div className="text-sm text-yellow-800">
-                  <div className="font-medium mb-1">Important:</div>
-                  <ul className="space-y-1 text-xs">
+             {/* Warning Message */}
+             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+               <div className="flex items-start gap-3">
+                 <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                 <div className="text-sm text-yellow-800">
+                   <div className="font-medium mb-1">Important:</div>
+                   <ul className="space-y-1 text-xs">
                     <li>• This action will map all selected transactions to the available donors</li>
-                    <li>• The donor amounts will be allocated to cover the transaction amounts</li>
-                    <li>• This action cannot be undone once confirmed</li>
+                     <li>• The donor amounts will be allocated to cover the transaction amounts</li>
+                     <li>• This action cannot be undone once confirmed</li>
                     {getSelectedTransactionsAmount() < getMappingAmount() && (
-                      <li className="text-green-600 font-medium">
+                       <li className="text-green-600 font-medium">
                         • Surplus amount (₹{(getMappingAmount() - getSelectedTransactionsAmount()).toLocaleString()}) will be returned to the donor with the highest remaining unallocated amount
                       </li>
                     )}
                     {getSelectedTransactionsAmount() === getMappingAmount() && (
                       <li className="text-blue-600 font-medium">
                         • Perfect match - all mapping amount will be used
-                      </li>
-                    )}
+                       </li>
+                     )}
                     {getSelectedTransactionsAmount() > getMappingAmount() && (
                       <li className="text-red-600 font-medium">• Warning: Insufficient mapping amount - some transactions may not be fully covered</li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
+                     )}
+                   </ul>
+                 </div>
+               </div>
+             </div>
+           </div>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowConfirmDialog(false)}
-              disabled={processing}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="default" 
-              onClick={handleMapping}
+           <div className="flex justify-end gap-3 mt-6">
+             <Button 
+               variant="outline" 
+               onClick={() => setShowConfirmDialog(false)}
+               disabled={processing}
+             >
+               Cancel
+             </Button>
+             <Button 
+               variant="default" 
+               onClick={handleMapping}
               disabled={processing || getSelectedTransactionsAmount() > getMappingAmount()}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {processing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirm Mapping
-                </>
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+               className="bg-blue-600 hover:bg-blue-700"
+             >
+               {processing ? (
+                 <>
+                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                   Processing...
+                 </>
+               ) : (
+                 <>
+                   <CheckCircle className="h-4 w-4 mr-2" />
+                   Confirm Mapping
+                 </>
+               )}
+             </Button>
+           </div>
+         </DialogContent>
+       </Dialog>
     </div>
   );
 } 
