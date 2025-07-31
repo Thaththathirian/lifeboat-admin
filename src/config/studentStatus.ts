@@ -2,26 +2,24 @@ import { StudentStatus } from '../types/student';
 
 // Student Status Constants
 export const STUDENT_STATUS_NEW_USER = 0;
-export const STUDENT_STATUS_PROFILE_UPDATE_PENDING = 1;
-export const STUDENT_STATUS_PERSONAL_DOCUMENTS_PENDING = 2;
-export const STUDENT_STATUS_PERSONAL_DOCUMENTS_SUBMITTED = 3;
-export const STUDENT_STATUS_INTERVIEW_SCHEDULED = 4;
-export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_PENDING = 5;
-export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_SUBMITTED = 6;
-export const STUDENT_STATUS_ELIGIBLE_FOR_SCHOLARSHIP = 7;
-export const STUDENT_STATUS_PAYMENT_PENDING = 8;
-export const STUDENT_STATUS_PAID = 9;
-export const STUDENT_STATUS_PAYMENT_VERIFIED = 10;
-export const STUDENT_STATUS_RECEIPT_DOCUMENTS_SUBMITTED = 11;
-export const STUDENT_STATUS_ALUMNI = 12;
-export const STUDENT_STATUS_BLOCKED = 13;
+export const STUDENT_STATUS_PERSONAL_DETAILS_PENDING = 1;
+export const STUDENT_STATUS_PERSONAL_DETAILS_SUBMITTED = 2;
+export const STUDENT_STATUS_INTERVIEW_SCHEDULED = 3;
+export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_PENDING = 4;
+export const STUDENT_STATUS_ACADEMIC_DOCUMENTS_SUBMITTED = 5;
+export const STUDENT_STATUS_ELIGIBLE_FOR_SCHOLARSHIP = 6;
+export const STUDENT_STATUS_PAYMENT_PENDING = 7;
+export const STUDENT_STATUS_PAID = 8;
+export const STUDENT_STATUS_PAYMENT_VERIFIED = 9;
+export const STUDENT_STATUS_RECEIPT_DOCUMENTS_SUBMITTED = 10;
+export const STUDENT_STATUS_ALUMNI = 11;
+export const STUDENT_STATUS_BLOCKED = 12;
 
 // Status Display Mappings
 export const statusDisplayMap: Record<StudentStatus, string> = {
   [StudentStatus.NEW_USER]: "New User",
-  [StudentStatus.PROFILE_UPDATE_PENDING]: "Profile Update Pending",
-  [StudentStatus.PERSONAL_DOCUMENTS_PENDING]: "Personal Documents Pending",
-  [StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED]: "Personal Documents Submitted",
+  [StudentStatus.PERSONAL_DETAILS_PENDING]: "Personal Details Pending",
+  [StudentStatus.PERSONAL_DETAILS_SUBMITTED]: "Personal Details Submitted",
   [StudentStatus.INTERVIEW_SCHEDULED]: "Interview Scheduled",
   [StudentStatus.ACADEMIC_DOCUMENTS_PENDING]: "Academic Documents Pending",
   [StudentStatus.ACADEMIC_DOCUMENTS_SUBMITTED]: "Academic Documents Submitted",
@@ -37,9 +35,8 @@ export const statusDisplayMap: Record<StudentStatus, string> = {
 // Status Color Mappings
 export const statusColorMap: Record<StudentStatus, string> = {
   [StudentStatus.NEW_USER]: 'bg-gray-100 text-gray-800',
-  [StudentStatus.PROFILE_UPDATE_PENDING]: 'bg-blue-100 text-blue-800',
-  [StudentStatus.PERSONAL_DOCUMENTS_PENDING]: 'bg-orange-100 text-orange-800',
-  [StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED]: 'bg-green-400 text-green-900',
+  [StudentStatus.PERSONAL_DETAILS_PENDING]: 'bg-blue-100 text-blue-800',
+  [StudentStatus.PERSONAL_DETAILS_SUBMITTED]: 'bg-green-400 text-green-900',
   [StudentStatus.INTERVIEW_SCHEDULED]: 'bg-purple-100 text-purple-800',
   [StudentStatus.ACADEMIC_DOCUMENTS_PENDING]: 'bg-yellow-100 text-yellow-800',
   [StudentStatus.ACADEMIC_DOCUMENTS_SUBMITTED]: 'bg-green-400 text-green-900',
@@ -55,9 +52,8 @@ export const statusColorMap: Record<StudentStatus, string> = {
 // Status Order for Workflow
 export const statusOrder: StudentStatus[] = [
   StudentStatus.NEW_USER,
-  StudentStatus.PROFILE_UPDATE_PENDING,
-  StudentStatus.PERSONAL_DOCUMENTS_PENDING,
-  StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED,
+  StudentStatus.PERSONAL_DETAILS_PENDING,
+  StudentStatus.PERSONAL_DETAILS_SUBMITTED,
   StudentStatus.INTERVIEW_SCHEDULED,
   StudentStatus.ACADEMIC_DOCUMENTS_PENDING,
   StudentStatus.ACADEMIC_DOCUMENTS_SUBMITTED,
@@ -73,9 +69,8 @@ export const statusOrder: StudentStatus[] = [
 // API Status Mapping
 export const statusApiMap: Record<StudentStatus, string> = {
   [StudentStatus.NEW_USER]: 'new_user',
-  [StudentStatus.PROFILE_UPDATE_PENDING]: 'profile_update_pending',
-  [StudentStatus.PERSONAL_DOCUMENTS_PENDING]: 'personal_documents_pending',
-  [StudentStatus.PERSONAL_DOCUMENTS_SUBMITTED]: 'personal_documents_submitted',
+  [StudentStatus.PERSONAL_DETAILS_PENDING]: 'personal_details_pending',
+  [StudentStatus.PERSONAL_DETAILS_SUBMITTED]: 'personal_details_submitted',
   [StudentStatus.INTERVIEW_SCHEDULED]: 'interview_scheduled',
   [StudentStatus.ACADEMIC_DOCUMENTS_PENDING]: 'academic_documents_pending',
   [StudentStatus.ACADEMIC_DOCUMENTS_SUBMITTED]: 'academic_documents_submitted',

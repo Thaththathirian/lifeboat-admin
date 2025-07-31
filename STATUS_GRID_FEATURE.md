@@ -35,26 +35,25 @@ The new expandable status grid provides an intuitive way to filter students by t
 ```typescript
 enum StudentStatus {
   NEW_USER = 0,
-  PROFILE_UPDATE_PENDING = 1,
-  PERSONAL_DOCUMENTS_PENDING = 2,
-  PERSONAL_DOCUMENTS_SUBMITTED = 3,
-  INTERVIEW_SCHEDULED = 4,
-  ACADEMIC_DOCUMENTS_PENDING = 5,
-  ACADEMIC_DOCUMENTS_SUBMITTED = 6,
-  ELIGIBLE_FOR_SCHOLARSHIP = 7,
-  PAYMENT_PENDING = 8,
-  PAID = 9,
-  PAYMENT_VERIFIED = 10,
-  RECEIPT_DOCUMENTS_SUBMITTED = 11,
-  ALUMNI = 12,
-  BLOCKED = 13,
+  PERSONAL_DETAILS_PENDING = 1,
+  PERSONAL_DETAILS_SUBMITTED = 2,
+  INTERVIEW_SCHEDULED = 3,
+  ACADEMIC_DOCUMENTS_PENDING = 4,
+  ACADEMIC_DOCUMENTS_SUBMITTED = 5,
+  ELIGIBLE_FOR_SCHOLARSHIP = 6,
+  PAYMENT_PENDING = 7,
+  PAID = 8,
+  PAYMENT_VERIFIED = 9,
+  RECEIPT_DOCUMENTS_SUBMITTED = 10,
+  ALUMNI = 11,
+  BLOCKED = 12,
 }
 ```
 
 ### API Calls
 - **All Students**: `GET /Admin/get_all_students?offset=0&limit=5`
 - **Filtered by Status**: `GET /Admin/get_all_students?offset=0&limit=5&status=1`
-- **Example**: Status 1 (Profile Update Pending) = `&status=1`
+- **Example**: Status 1 (Personal Details Pending) = `&status=1`
 
 ## User Flow
 
@@ -146,16 +145,16 @@ const loadStudentsByStatus = async (status: StudentStatus | null) => {
 
 ## Usage Examples
 
-### Filter by Profile Update Pending Students
+### Filter by Personal Details Pending Students
 1. Click "Show Status Grid"
-2. Click "Profile Update Pending" box
+2. Click "Personal Details Pending" box
 3. API calls: `GET /Admin/get_all_students?offset=0&limit=5&status=1`
-4. Table shows only profile update pending students
+4. Table shows only personal details pending students
 
 ### Filter by Payment Completed
 1. Click "Show Status Grid"
-2. Click "Payment Completed" box
-3. API calls: `GET /Admin/get_all_students?offset=0&limit=5&status=7`
+2. Click "Paid" box
+3. API calls: `GET /Admin/get_all_students?offset=0&limit=5&status=8`
 4. Table shows only payment completed students
 
 ### Reset to All Students

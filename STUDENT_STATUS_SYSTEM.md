@@ -9,19 +9,18 @@ The system uses a TypeScript enum to define all possible student statuses:
 ```typescript
 export enum StudentStatus {
   NEW_USER = 0,
-  PROFILE_UPDATE_PENDING = 1,
-  PERSONAL_DOCUMENTS_PENDING = 2,
-  PERSONAL_DOCUMENTS_SUBMITTED = 3,
-  INTERVIEW_SCHEDULED = 4,
-  ACADEMIC_DOCUMENTS_PENDING = 5,
-  ACADEMIC_DOCUMENTS_SUBMITTED = 6,
-  ELIGIBLE_FOR_SCHOLARSHIP = 7,
-  PAYMENT_PENDING = 8,
-  PAID = 9,
-  PAYMENT_VERIFIED = 10,
-  RECEIPT_DOCUMENTS_SUBMITTED = 11,
-  ALUMNI = 12,
-  BLOCKED = 13,
+  PERSONAL_DETAILS_PENDING = 1,
+  PERSONAL_DETAILS_SUBMITTED = 2,
+  INTERVIEW_SCHEDULED = 3,
+  ACADEMIC_DOCUMENTS_PENDING = 4,
+  ACADEMIC_DOCUMENTS_SUBMITTED = 5,
+  ELIGIBLE_FOR_SCHOLARSHIP = 6,
+  PAYMENT_PENDING = 7,
+  PAID = 8,
+  PAYMENT_VERIFIED = 9,
+  RECEIPT_DOCUMENTS_SUBMITTED = 10,
+  ALUMNI = 11,
+  BLOCKED = 12,
 }
 ```
 
@@ -30,19 +29,18 @@ export enum StudentStatus {
 The typical student journey follows this progression:
 
 1. **NEW_USER** (0) - Student registers but hasn't updated profile
-2. **PROFILE_UPDATE_PENDING** (1) - Student needs to update their profile information
-3. **PERSONAL_DOCUMENTS_PENDING** (2) - Personal documents are pending submission
-4. **PERSONAL_DOCUMENTS_SUBMITTED** (3) - Personal documents have been submitted
-5. **INTERVIEW_SCHEDULED** (4) - Interview has been scheduled
-6. **ACADEMIC_DOCUMENTS_PENDING** (5) - Academic documents are pending submission
-7. **ACADEMIC_DOCUMENTS_SUBMITTED** (6) - Academic documents have been submitted
-8. **ELIGIBLE_FOR_SCHOLARSHIP** (7) - Student is eligible for scholarship
-9. **PAYMENT_PENDING** (8) - Student is waiting to make payment
-10. **PAID** (9) - Payment has been completed
-11. **PAYMENT_VERIFIED** (10) - Payment has been verified by admin
-12. **RECEIPT_DOCUMENTS_SUBMITTED** (11) - Receipt documents have been submitted
-13. **ALUMNI** (12) - Student has completed the program
-14. **BLOCKED** (13) - Student account has been blocked
+2. **PERSONAL_DETAILS_PENDING** (1) - Student needs to update their personal details
+3. **PERSONAL_DETAILS_SUBMITTED** (2) - Personal details have been submitted
+4. **INTERVIEW_SCHEDULED** (3) - Interview has been scheduled
+5. **ACADEMIC_DOCUMENTS_PENDING** (4) - Academic documents are pending submission
+6. **ACADEMIC_DOCUMENTS_SUBMITTED** (5) - Academic documents have been submitted
+7. **ELIGIBLE_FOR_SCHOLARSHIP** (6) - Student is eligible for scholarship
+8. **PAYMENT_PENDING** (7) - Student is waiting to make payment
+9. **PAID** (8) - Payment has been completed
+10. **PAYMENT_VERIFIED** (9) - Payment has been verified by admin
+11. **RECEIPT_DOCUMENTS_SUBMITTED** (10) - Receipt documents have been submitted
+12. **ALUMNI** (11) - Student has completed the program
+13. **BLOCKED** (12) - Student account has been blocked
 
 ## API Integration
 
