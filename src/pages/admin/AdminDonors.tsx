@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowUp, ArrowDown, Eye, Users, Ban, Gift, LogIn, AlertTriangle, MapPin, Square, CheckSquare } from "lucide-react";
+import { ArrowUp, ArrowDown, Eye, Users, Ban, Gift, LogIn, AlertTriangle, MapPin, Square, CheckSquare, DollarSign, IndianRupee } from "lucide-react";
 
 // Mock data with actual student mapping information
 const mockDonorMappings = [
@@ -83,7 +83,7 @@ const mockDonorMappings = [
     donationType: "One-Time",
     autoDebit: false,
     activeStudents: 0,
-    isBlocked: true,
+    isBlocked: false,
     email: "amit.patel@email.com",
     phone: "+91-9876543212",
     studentMappings: [],
@@ -100,7 +100,7 @@ const mockDonorMappings = [
     donationType: "Monthly",
     autoDebit: true,
     activeStudents: 3,
-    isBlocked: false,
+    isBlocked: true,
     email: "priya.sharma@email.com",
     phone: "+91-9876543213",
     studentMappings: [
@@ -213,6 +213,29 @@ export default function AdminDonors() {
     return donor.totalDonated - totalAllocated;
   };
 
+  // Calculate total unallocated amount for all donors
+  const getTotalUnallocatedAmount = () => {
+    return mockDonorMappings.reduce((sum, donor) => sum + getUnallocatedAmount(donor), 0);
+  };
+
+  // Calculate total unmapped transaction amount (sum of all unmapped transactions)
+  const getTotalUnmappedTransactionAmount = () => {
+    // This should be the sum of all unmapped transactions
+    // For now, using a mock value that represents all unmapped transactions
+    return 65900; // Mock value for all unmapped transactions
+  };
+
+  // Calculate cumulative amount for selected donors
+  const getSelectedDonorsCumulativeAmount = () => {
+    return selectedDonors.reduce((sum, donorId) => {
+      const donor = mockDonorMappings.find(d => d.donorId === donorId);
+      if (donor) {
+        return sum + getUnallocatedAmount(donor);
+      }
+      return sum;
+    }, 0);
+  };
+
   const toggleSelectAll = () => {
     if (selectedDonors.length === filtered.length) {
       setSelectedDonors([]);
@@ -226,7 +249,14 @@ export default function AdminDonors() {
       alert("Please select donors for mapping.");
       return;
     }
-    navigate('/admin/donor-mapping', { state: { selectedDonors } });
+    
+    // Preserve selected transactions if returning from mapping page
+    const mappingState = {
+      selectedDonors,
+      selectedTransactions: location.state?.selectedTransactions || []
+    };
+    
+    navigate('/admin/donor-mapping', { state: mappingState });
   };
 
   let filtered = mockDonorMappings.filter(d =>
@@ -245,31 +275,65 @@ export default function AdminDonors() {
       if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
       return 0;
     });
+  } else {
+    // Default sorting by unallocated amount (highest to lowest)
+    filtered = [...filtered].sort((a, b) => {
+      const aUnallocated = getUnallocatedAmount(a);
+      const bUnallocated = getUnallocatedAmount(b);
+      return bUnallocated - aUnallocated; // Highest to lowest
+    });
   }
 
   return (
     <div className="main-content-container">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Donor Management</h2>
+        <div className="flex items-center gap-6">
+          <h2 className="text-2xl font-bold">Donor Management</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              <span className="text-sm text-muted-foreground">Unallocated:</span>
+              <Badge variant="default" className="bg-green-100 text-green-800 font-semibold text-base px-3 py-1">
+                {getTotalUnallocatedAmount().toLocaleString()}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-orange-600" />
+              <span className="text-sm text-muted-foreground">Transactions:</span>
+              <Badge variant="default" className="bg-orange-100 text-orange-800 font-semibold text-base px-3 py-1">
+                {getTotalUnmappedTransactionAmount().toLocaleString()}
+              </Badge>
+            </div>
+          </div>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline">Download List</Button>
-          <Button 
-            variant="default" 
-            disabled={selectedDonors.length === 0} 
-            onClick={handleMapping}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <MapPin className="inline h-4 w-4 mr-2" />
-            Map Payments
-          </Button>
         </div>
       </div>
-      <Input
-        className="mb-4 max-w-xs"
-        placeholder="Filter by donor name or ID..."
-        value={filter}
-        onChange={e => setFilter(e.target.value)}
-      />
+      <div className="flex items-center justify-between mb-4">
+        <Input
+          className="max-w-xs"
+          placeholder="Filter by donor name or ID..."
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+        />
+        <Button 
+          variant="default" 
+          disabled={selectedDonors.length === 0 || getSelectedDonorsCumulativeAmount() <= 0} 
+          onClick={handleMapping}
+          className="bg-green-600 hover:bg-green-700 h-auto py-3 px-4"
+        >
+          <IndianRupee className="inline h-4 w-4 mr-2" />
+          {selectedDonors.length > 0 ? (
+            <div className="flex flex-col items-center gap-1">
+              <span className="font-bold text-lg leading-tight">{getSelectedDonorsCumulativeAmount().toLocaleString()}</span>
+              <span className="text-xs opacity-90 leading-tight">Map Donors</span>
+            </div>
+          ) : (
+            "Map Donors"
+          )}
+        </Button>
+      </div>
       <Card className="shadow-soft">
         <CardHeader>
           <CardTitle>Donor Mappings</CardTitle>
@@ -289,14 +353,24 @@ export default function AdminDonors() {
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('lastDonation')}>Last Donation {sortBy === 'lastDonation' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('donationType')}>Donation Type {sortBy === 'donationType' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                 <TableHead className="text-center cursor-pointer" onClick={() => handleSort('autoDebit')}>Auto Debit {sortBy === 'autoDebit' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-                <TableHead className="text-center cursor-pointer" onClick={() => handleSort('activeStudents')}>Active Students {sortBy === 'activeStudents' && (sortDir === 'asc' ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(donor => (
-                <TableRow key={donor.donorId}>
-                  <TableCell className="text-center w-8">
+                <TableRow 
+                  key={donor.donorId} 
+                  className={`${donor.isBlocked ? "bg-red-50" : ""} cursor-pointer hover:bg-gray-50`}
+                  onClick={(e) => {
+                    // Don't trigger selection if clicking on actions column or checkbox column
+                    const target = e.target as HTMLElement;
+                    if (!target.closest('td:last-child') && !target.closest('td:first-child')) {
+                      toggleDonorSelection(donor.donorId);
+                    }
+                  }}
+                >
+                  <TableCell className="text-center w-8" onClick={(e) => e.stopPropagation()}>
                     <Button 
                       size="icon" 
                       variant="ghost" 
@@ -309,10 +383,7 @@ export default function AdminDonors() {
                   </TableCell>
                   <TableCell className="text-center">{donor.donorId}</TableCell>
                   <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {donor.donorName}
-                      {donor.isBlocked && <Ban className="h-4 w-4 text-red-500" title="Blocked" />}
-                    </div>
+                    {donor.donorName}
                   </TableCell>
                   <TableCell className="text-center">{donor.occupation}</TableCell>
                   <TableCell className="text-center">₹{donor.totalDonated.toLocaleString()}</TableCell>
@@ -329,10 +400,8 @@ export default function AdminDonors() {
                       : <Badge variant="default" className="bg-yellow-100 text-yellow-800">No</Badge>
                     }
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="default" className="bg-blue-100 text-blue-800">{donor.activeStudents}</Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
+
+                  <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1 justify-center">
                       <Button 
                         size="sm"
@@ -388,7 +457,7 @@ export default function AdminDonors() {
                 <DialogTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   {openDonor.donorName} ({openDonor.donorId})
-                  {openDonor.isBlocked && <Ban className="h-5 w-5 text-red-500" title="Blocked" />}
+                  {openDonor.isBlocked && <Ban className="h-5 w-5 text-red-500" />}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
