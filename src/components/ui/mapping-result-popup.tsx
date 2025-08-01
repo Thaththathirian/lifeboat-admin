@@ -95,4 +95,4 @@ export function MappingResultPopup({ open, onOpenChange, result, onClose }: Mapp
       </DialogContent>
     </Dialog>
   );
-} 
+}

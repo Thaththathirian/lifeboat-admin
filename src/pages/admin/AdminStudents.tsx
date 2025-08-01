@@ -41,7 +41,6 @@ export default function AdminStudents() {
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "">("");
   const [sortBy, setSortBy] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
-  const [openStudent, setOpenStudent] = useState<Student | null>(null);
   const [statusModal, setStatusModal] = useState(false);
   const [blockModal, setBlockModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -613,8 +612,8 @@ export default function AdminStudents() {
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            title="View" 
-                            onClick={() => setOpenStudent(student)}
+                            title="View Details" 
+                            onClick={() => navigate(`/admin/students/${student.id || 'pending'}`)}
                             className="h-8 w-8"
                           >
                             <Eye className="h-4 w-4 text-blue-600" />
@@ -677,30 +676,7 @@ export default function AdminStudents() {
           </div>
         </CardContent>
       </Card>
-      {/* Student Details Modal */}
-      <Dialog open={!!openStudent} onOpenChange={() => setOpenStudent(null)}>
-        <DialogContent className="max-w-md w-full p-8 rounded-xl shadow-2xl mx-auto text-center bg-white flex flex-col items-center justify-center">
-          {openStudent && (
-            <>
-              <DialogHeader>
-                <DialogTitle>
-                  {openStudent.name} ({openStudent.id || 'Pending ID'})
-                </DialogTitle>
-              </DialogHeader>
-              <div className="mb-2"><b>Email:</b> {openStudent.email}</div>
-              <div className="mb-2"><b>Mobile:</b> {openStudent.mobile}</div>
-              <div className="mb-2"><b>College:</b> {openStudent.college}</div>
-              <div className="mb-2"><b>Status:</b> <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(openStudent.status)} mx-auto block text-center`}>{getStatusText(openStudent.status)}</span></div>
-              <div className="mb-2"><b>Scholarship:</b> ₹{openStudent.scholarship.toLocaleString()}</div>
-              <div className="mb-4 flex flex-wrap gap-2 justify-center">
-                {statusSteps.map((step, idx) => (
-                  <span key={idx} className={`px-2 py-1 rounded text-xs font-semibold ${openStudent.statusBar.includes(getStatusText(step)) ? getStatusColor(step) : 'bg-gray-100 text-gray-400'}`}>{getStatusText(step)}</span>
-                ))}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+
       {/* Status Change Modal */}
       <Dialog open={statusModal} onOpenChange={() => setStatusModal(false)}>
         <DialogContent className="max-w-md w-full p-8 rounded-xl shadow-2xl mx-auto text-center bg-white flex flex-col items-center justify-center">

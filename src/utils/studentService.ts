@@ -58,6 +58,112 @@ const getAuthToken = (): string | null => {
   }
 };
 
+// Fetch a single student by ID
+export const fetchStudentById = async (studentId: string): Promise<Student | null> => {
+  try {
+    console.log('🚀 fetchStudentById called with ID:', studentId);
+    
+    const apiUrl = `${getApiBaseUrl()}/Admin/get_student_by_id`;
+    console.log('🌐 API Base URL:', apiUrl);
+    
+    // Get authentication token
+    const authToken = getAuthToken();
+    console.log('🔑 Auth token retrieved:', !!authToken);
+    
+    // For development, if no auth token, try without it
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+    };
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+      console.log('🔑 Authorization header set:', `Bearer ${authToken.substring(0, 20)}...`);
+    } else {
+      console.log('⚠️ No auth token found, proceeding without authorization');
+    }
+
+    const response = await fetch(`${apiUrl}?student_id=${studentId}`, {
+      method: 'GET',
+      headers,
+    });
+
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ API Error:', response.status, errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('📦 API Response:', data);
+
+    if (data.success && data.student) {
+      return data.student;
+    } else {
+      console.error('❌ API returned success: false or no student data');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error fetching student by ID:', error);
+    throw error;
+  }
+};
+
+// Fetch student documents by ID
+export const fetchStudentDocuments = async (studentId: string): Promise<any[]> => {
+  try {
+    console.log('🚀 fetchStudentDocuments called with ID:', studentId);
+    
+    const apiUrl = `${getApiBaseUrl()}/Admin/get_student_documents`;
+    console.log('🌐 API Base URL:', apiUrl);
+    
+    // Get authentication token
+    const authToken = getAuthToken();
+    console.log('🔑 Auth token retrieved:', !!authToken);
+    
+    // For development, if no auth token, try without it
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+    };
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+      console.log('🔑 Authorization header set:', `Bearer ${authToken.substring(0, 20)}...`);
+    } else {
+      console.log('⚠️ No auth token found, proceeding without authorization');
+    }
+
+    const response = await fetch(`${apiUrl}?student_id=${studentId}`, {
+      method: 'GET',
+      headers,
+    });
+
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ API Error:', response.status, errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('📦 API Response:', data);
+
+    if (data.success && data.documents) {
+      return data.documents;
+    } else {
+      console.error('❌ API returned success: false or no documents data');
+      return [];
+    }
+  } catch (error) {
+    console.error('❌ Error fetching student documents:', error);
+    throw error;
+  }
+};
+
 // Fetch students from API
 export const fetchStudents = async (params: StudentsRequest): Promise<StudentsResponse> => {
   try {

@@ -111,7 +111,7 @@ export function Navigation({ userType, className, closeSidebar }: NavigationProp
 
   const renderNavItem = (item: NavItem, level: number = 0) => {
     const isActive = location.pathname === item.path || 
-      (item.title === "Students" && location.pathname === "/admin/payment-allotment") ||
+      (item.title === "Students" && (location.pathname === "/admin/payment-allotment" || location.pathname.startsWith("/admin/students/"))) ||
       (item.title === "Transactions" && location.pathname === "/admin/donor-selection") ||
       (item.title === "Donors" && location.pathname === "/admin/donor-mapping");
     const isExpanded = item.children && (expandedItems.includes(item.title) || item.children!.some(child => location.pathname === child.path));

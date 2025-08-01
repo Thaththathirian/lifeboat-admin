@@ -14,6 +14,8 @@ import AdminDashboard from "@/pages/admin/AdminDashboard"
 import AdminMessages from "@/pages/admin/AdminMessages"
 import AdminNotifications from "@/pages/admin/AdminNotifications"
 import AdminStudents from "@/pages/admin/AdminStudents"
+import StudentDetails from "@/pages/admin/StudentDetails"
+import StudentActivities from "@/pages/admin/StudentActivities"
 import AdminColleges from "@/pages/admin/AdminColleges"
 import AdminDonors from "@/pages/admin/AdminDonors"
 import AdminTransactions from "@/pages/admin/AdminTransactions"
@@ -265,6 +267,22 @@ function App() {
           <ProtectedAdminRoute>
             <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
               <AdminStudents />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/:studentId/activities" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <StudentActivities />
+            </DashboardLayout>
+          </ProtectedAdminRoute>
+        } />
+        
+        <Route path="/admin/students/:studentId" element={
+          <ProtectedAdminRoute>
+            <DashboardLayout userType="admin" userName={currentUser?.name || ""} userAvatar={currentUser?.avatar} currentPath={currentPath} onNavigate={handleNavigate} onLogout={handleLogout}>
+              <StudentDetails />
             </DashboardLayout>
           </ProtectedAdminRoute>
         } />

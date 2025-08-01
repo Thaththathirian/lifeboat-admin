@@ -46,7 +46,7 @@ export function DashboardLayout({
 
       <div className="flex">
         {/* Sidebar - Desktop */}
-        <div className="hidden md:block md:w-64 lg:w-72">
+        <div className="hidden md:block md:w-48 lg:w-56">
           <Sidebar
             userType={userType}
             className="h-[calc(100vh-4rem)] sticky top-16"
@@ -77,7 +77,7 @@ export function DashboardLayout({
                   stiffness: 300,
                   duration: 0.4 
                 }}
-                className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-white border-r z-50 md:hidden"
+                className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-56 bg-white border-r z-50 md:hidden"
               >
                 <Sidebar
                   userType={userType}
@@ -97,7 +97,7 @@ export function DashboardLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="w-full max-w-[98vw] md:max-w-[95vw] lg:max-w-[90vw] xl:max-w-[85vw] 2xl:max-w-[80vw] p-4 md:p-6 lg:p-8 mx-auto flex-1"
+              className="w-full max-w-[99vw] md:max-w-[97vw] lg:max-w-[95vw] xl:max-w-[92vw] 2xl:max-w-[90vw] p-1 md:p-2 lg:p-3 mx-auto flex-1"
             >
               {children}
             </motion.div>
