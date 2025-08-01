@@ -13,8 +13,6 @@ import {
   Calendar, 
   CheckCircle, 
   AlertCircle, 
-  Play, 
-  Pause, 
   Settings,
   History,
   TrendingUp,
@@ -123,15 +121,7 @@ export default function AdminSchedulers() {
     history.status.toLowerCase().includes(filter.toLowerCase())
   );
 
-  const handleToggleScheduler = (schedulerId: string, action: 'start' | 'pause') => {
-    const scheduler = mockSchedulers.find(s => s.id === schedulerId);
-    if (scheduler) {
-      toast({
-        title: `${action === 'start' ? 'Started' : 'Paused'} Scheduler`,
-        description: `${scheduler.name} has been ${action === 'start' ? 'started' : 'paused'} successfully`,
-      });
-    }
-  };
+
 
   const handleViewHistory = (schedulerId: string) => {
     setSelectedScheduler(schedulerId);
@@ -143,7 +133,7 @@ export default function AdminSchedulers() {
       case 'Active':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'Paused':
-        return <Pause className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-yellow-500" />;
       case 'Error':
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
@@ -245,14 +235,6 @@ export default function AdminSchedulers() {
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant={scheduler.status === 'Active' ? 'outline' : 'default'}
-                        onClick={() => handleToggleScheduler(scheduler.id, scheduler.status === 'Active' ? 'pause' : 'start')}
-                      >
-                        {scheduler.status === 'Active' ? <Pause className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
-                        {scheduler.status === 'Active' ? 'Pause' : 'Start'}
-                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
