@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentMappingConfirmation } from "@/components/ui/payment-mapping-confirmation";
 import { ArrowLeft, CreditCard, CheckCircle, Loader2, DollarSign } from "lucide-react";
 import { Student, StudentStatus } from "@/types/student";
 import { fetchStudents, updateStudentStatus, getStatusColor, getStatusText } from "@/utils/studentService";
@@ -240,54 +241,25 @@ export default function PaymentAllotmentPage() {
       </Card>
 
       {/* Confirmation Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Payment Allotment</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-yellow-600">
-              <DollarSign className="h-5 w-5" />
-              <span className="font-medium">Total Amount: ₹{getTotalAmount().toLocaleString()}</span>
-            </div>
-            <div className="text-sm text-gray-600">
-              This will:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Allot the specified amounts to {students.length} students</li>
-                <li>Update their status to "Payment Pending"</li>
-                <li>Create payment records for tracking</li>
-              </ul>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowConfirmDialog(false)}
-                disabled={processing}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="default" 
-                onClick={handleAllotPayment}
-                disabled={processing}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {processing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Confirm Allotment
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PaymentMappingConfirmation
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        selectedTransactions={students.map(student => ({
+          id: student.id || '',
+          amount: studentAmounts[student.id || ''] || 0,
+          date: new Date().toISOString().split('T')[0],
+          studentId: student.id || '',
+          studentName: student.name || '',
+          college: student.college || '',
+          description: `College Fee: ₹${(student.collegeFee || 0).toLocaleString()}`
+        }))}
+        selectedDonors={[]} // No donors in payment allotment
+        totalTransactionAmount={getTotalAmount()}
+        totalDonorAmount={0} // No donor amount in payment allotment
+        onConfirm={handleAllotPayment}
+        title="Confirm Payment Allotment"
+        showTransactionDescription={true}
+      />
     </div>
   );
 } 

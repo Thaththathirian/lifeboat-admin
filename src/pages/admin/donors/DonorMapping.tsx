@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PaymentMappingConfirmation } from "@/components/ui/payment-mapping-confirmation";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
@@ -127,70 +128,31 @@ export default function DonorMapping() {
             <DialogTrigger asChild>
               <Button>Create New Mapping</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Create Donor-Student Mapping</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Select Donors</h3>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {mockAvailableDonors.map(donor => (
-                      <div key={donor.id} className="flex items-center space-x-2 p-2 border rounded">
-                        <input
-                          type="checkbox"
-                          checked={selectedDonors.includes(donor.id)}
-                          onChange={(e) => handleDonorSelection(donor.id, e.target.checked)}
-                          disabled={donor.unallocatedAmount === 0}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium">{donor.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            Available: ₹{donor.unallocatedAmount.toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-3 bg-muted rounded">
-                    <div className="font-semibold">Total Selected: ₹{getTotalSelectedAmount().toLocaleString()}</div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Allocate to Students</h3>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {mockEligibleStudents.map(student => (
-                      <div key={student.id} className="p-2 border rounded">
-                        <div className="font-medium">{student.name}</div>
-                        <div className="text-sm text-muted-foreground">{student.college}</div>
-                        <div className="text-sm text-muted-foreground mb-2">
-                          Required: ₹{student.requiredAmount.toLocaleString()}
-                        </div>
-                        <Input
-                          type="number"
-                          placeholder="Allocation amount"
-                          value={studentAllocations[student.id] || ""}
-                          onChange={(e) => handleAllocation(student.id, parseInt(e.target.value) || 0)}
-                          max={student.requiredAmount}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-3 bg-muted rounded">
-                    <div className="font-semibold">Total Allocated: ₹{getTotalAllocatedAmount().toLocaleString()}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Remaining: ₹{(getTotalSelectedAmount() - getTotalAllocatedAmount()).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <Button variant="outline" onClick={() => setMappingDialog(false)}>Cancel</Button>
-                <Button onClick={handleCreateMapping}>Create Mapping</Button>
-              </div>
-            </DialogContent>
           </Dialog>
+          
+          <PaymentMappingConfirmation
+            open={mappingDialog}
+            onOpenChange={setMappingDialog}
+            selectedTransactions={mockEligibleStudents.map(student => ({
+              id: student.id,
+              amount: studentAllocations[student.id] || 0,
+              date: new Date().toISOString().split('T')[0],
+              studentId: student.id,
+              studentName: student.name,
+              college: student.college,
+              description: `Required: ₹${student.requiredAmount.toLocaleString()}`
+            }))}
+            selectedDonors={mockAvailableDonors.filter(donor => selectedDonors.includes(donor.id)).map(donor => ({
+              id: donor.id,
+              name: donor.name,
+              unallocatedAmount: donor.unallocatedAmount
+            }))}
+            totalTransactionAmount={getTotalAllocatedAmount()}
+            totalDonorAmount={getTotalSelectedAmount()}
+            onConfirm={handleCreateMapping}
+            title="Create Donor-Student Mapping"
+            showTransactionDescription={true}
+          />
           <Button variant="outline">Download Report</Button>
         </div>
       </div>

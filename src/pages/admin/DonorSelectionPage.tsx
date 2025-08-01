@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentMappingConfirmation } from "@/components/ui/payment-mapping-confirmation";
+import { MappingResultPopup } from "@/components/ui/mapping-result-popup";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Search, Users, CreditCard, AlertCircle, Edit } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -56,6 +58,8 @@ export default function DonorSelectionPage() {
   const [selectedDonors, setSelectedDonors] = useState<string[]>(location.state?.selectedDonors || []);
   const [searchFilter, setSearchFilter] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showResultPopup, setShowResultPopup] = useState(false);
+  const [mappingResult, setMappingResult] = useState<any>(null);
 
   // Restore selected donors when coming back from transactions page
   useEffect(() => {
@@ -126,13 +130,19 @@ export default function DonorSelectionPage() {
 
   const handleConfirmMapping = () => {
     // Logic for creating mappings
-    toast({
-      title: "Mapping Created",
-      description: `Successfully mapped ${selectedTransactions.length} transaction(s) to ${selectedDonors.length} donor(s)`,
+    setShowConfirmDialog(false);
+    
+    // Generate single mapping ID for the entire operation
+    const singleMappingId = `MAP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Show success result popup
+    setMappingResult({
+      success: true,
+      message: `Successfully mapped ${selectedTransactions.length} transaction(s) to ${selectedDonors.length} donor(s)`,
+      mappedIds: [singleMappingId],
+      totalAmount: totalTransactionAmount
     });
-
-    // Navigate back to transactions page
-    navigate("/admin/transactions");
+    setShowResultPopup(true);
   };
 
   const handleBack = () => {
@@ -295,163 +305,39 @@ export default function DonorSelectionPage() {
 
 
       {/* Confirmation Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-blue-600" />
-              Confirm Transaction Mapping
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-medium text-blue-700">Total Transaction Amount</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-bold text-blue-700">₹{totalTransactionAmount.toLocaleString()}</div>
-                  <div className="text-xs text-blue-600">{selectedTransactions.length} Transactions</div>
-                </CardContent>
-              </Card>
+      <PaymentMappingConfirmation
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        selectedTransactions={selectedTransactions}
+        selectedDonors={selectedDonors.map(donorId => {
+          const donor = mockAvailableDonors.find(d => d.id === donorId);
+          return donor ? {
+            id: donor.id,
+            name: donor.name,
+            email: donor.email,
+            unallocatedAmount: donor.unallocatedAmount
+          } : null;
+        }).filter(Boolean)}
+        totalTransactionAmount={totalTransactionAmount}
+        totalDonorAmount={totalUnallocatedAmount}
+        onConfirm={handleConfirmMapping}
+        title="Confirm Transaction Mapping"
+        showDonorEmail={true}
+        showTransactionDescription={true}
+      />
 
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-medium text-green-700">Total Donor Amount</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-bold text-green-700">₹{totalUnallocatedAmount.toLocaleString()}</div>
-                  <div className="text-xs text-green-600">{selectedDonors.length} Donors</div>
-                </CardContent>
-              </Card>
-
-              <Card className={`${totalUnallocatedAmount >= totalTransactionAmount ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-medium">Status</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className={`text-2xl font-bold ${totalUnallocatedAmount >= totalTransactionAmount ? 'text-green-700' : 'text-red-700'}`}>
-                    {totalUnallocatedAmount >= totalTransactionAmount ? 'Sufficient' : 'Insufficient'}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {totalUnallocatedAmount >= totalTransactionAmount 
-                      ? `Surplus: ₹${(totalUnallocatedAmount - totalTransactionAmount).toLocaleString()}`
-                      : `Shortfall: ₹${(totalTransactionAmount - totalUnallocatedAmount).toLocaleString()}`
-                    }
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Selected Donors */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-green-700">Selected Donors</h3>
-              <div className="max-h-48 overflow-y-auto border rounded-md">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
-                    <TableRow>
-                      <TableHead>Donor ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Unallocated Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedDonors.map(donorId => {
-                      const donor = mockAvailableDonors.find(d => d.id === donorId);
-                      return donor ? (
-                        <TableRow key={donor.id}>
-                          <TableCell className="font-medium">{donor.id}</TableCell>
-                          <TableCell>{donor.name}</TableCell>
-                          <TableCell>{donor.email}</TableCell>
-                          <TableCell>₹{donor.unallocatedAmount.toLocaleString()}</TableCell>
-                          <TableCell>
-                            <Badge variant={donor.unallocatedAmount > 0 ? "default" : "secondary"}>
-                              {donor.unallocatedAmount > 0 ? "Available" : "No Funds"}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ) : null;
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-
-            {/* Selected Transactions */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-blue-700">Selected Transactions</h3>
-              <div className="max-h-48 overflow-y-auto border rounded-md">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
-                    <TableRow>
-                      <TableHead>Transaction ID</TableHead>
-                      <TableHead>Student</TableHead>
-                      <TableHead>College</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedTransactions.map((transaction: Transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell className="font-medium">{transaction.id}</TableCell>
-                        <TableCell>
-                          <div>{transaction.studentName}</div>
-                          <div className="text-sm text-muted-foreground">{transaction.studentId}</div>
-                        </TableCell>
-                        <TableCell>{transaction.college}</TableCell>
-                        <TableCell>₹{transaction.amount.toLocaleString()}</TableCell>
-                        <TableCell>{transaction.date}</TableCell>
-                        <TableCell>{transaction.description}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{transaction.status}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-
-            {/* Warning Message */}
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                <div className="text-sm text-yellow-800">
-                  <div className="font-medium mb-1">Important:</div>
-                  <ul className="space-y-1 text-xs">
-                    <li>• This action will map the selected transactions to the selected donors</li>
-                    <li>• The donor amounts will be allocated to cover the transaction amounts</li>
-                    <li>• This action cannot be undone once confirmed</li>
-                    {totalUnallocatedAmount < totalTransactionAmount && (
-                      <li className="text-red-600 font-medium">• Warning: Insufficient funds - some transactions may not be fully covered</li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleConfirmMapping}
-              disabled={totalUnallocatedAmount < totalTransactionAmount}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Confirm Mapping
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Result Popup */}
+      <MappingResultPopup
+        open={showResultPopup}
+        onOpenChange={setShowResultPopup}
+        result={mappingResult}
+        onClose={() => {
+          setShowResultPopup(false);
+          setMappingResult(null);
+          // Navigate to transactions page after popup closes
+          navigate('/admin/transactions');
+        }}
+      />
     </div>
   );
 } 

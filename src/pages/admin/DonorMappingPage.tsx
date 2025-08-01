@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentMappingConfirmation } from "@/components/ui/payment-mapping-confirmation";
+import { MappingResultPopup } from "@/components/ui/mapping-result-popup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, CheckCircle, Loader2, DollarSign, Users, ArrowUpDown, Search, Filter, AlertTriangle, Edit, CreditCard as PaymentIcon } from "lucide-react";
 
@@ -192,6 +194,8 @@ export default function DonorMappingPage() {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showResultPopup, setShowResultPopup] = useState(false);
+  const [mappingResult, setMappingResult] = useState<any>(null);
   const [donorAmounts, setDonorAmounts] = useState<{[key: string]: number}>({});
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
 
@@ -341,9 +345,30 @@ export default function DonorMappingPage() {
       setShowConfirmDialog(false);
       setSelectedTransactions([]);
       
+      // Generate single mapping ID for the entire operation
+      const singleMappingId = `MAP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Show success result popup
+      setMappingResult({
+        success: true,
+        message: `Successfully mapped ${newMappings.length} transactions`,
+        mappedIds: [singleMappingId],
+        totalAmount: selectedTransactionsData.reduce((sum, transaction) => sum + transaction.amount, 0)
+      });
+      setShowResultPopup(true);
+      
     } catch (error) {
       console.error('Failed to create mappings:', error);
       setProcessing(false);
+      
+      // Show failure result popup
+      setMappingResult({
+        success: false,
+        message: 'Failed to create mappings. Please try again.',
+        mappedIds: [],
+        totalAmount: 0
+      });
+      setShowResultPopup(true);
     }
   };
 
@@ -691,195 +716,43 @@ export default function DonorMappingPage() {
         </CardContent>
       </Card>
 
-             {/* Confirmation Dialog */}
-       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-           <DialogHeader>
-             <DialogTitle className="flex items-center gap-2">
-               <AlertTriangle className="h-5 w-5 text-blue-600" />
-               Confirm Payment Mapping
-             </DialogTitle>
-           </DialogHeader>
-           
-           <div className="space-y-6">
-             {/* Summary Cards */}
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-               <Card className="border-blue-200 bg-blue-50">
-                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-medium text-blue-700">Selected Transactions</CardTitle>
-                 </CardHeader>
-                 <CardContent className="pt-0">
-                  <div className="text-2xl font-bold text-blue-700">₹{getSelectedTransactionsAmount().toLocaleString()}</div>
-                  <div className="text-xs text-blue-600">{selectedTransactions.length} Transactions</div>
-                 </CardContent>
-               </Card>
+      {/* Confirmation Dialog */}
+      <PaymentMappingConfirmation
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        selectedTransactions={filteredTransactions.filter(transaction => selectedTransactions.includes(transaction.id))}
+        selectedDonors={donors.map(donor => ({
+          id: donor.donorId,
+          name: donor.donorName,
+          email: donor.email,
+          unallocatedAmount: getUnallocatedAmount(donor),
+          totalDonated: donor.totalDonated,
+          studentMappings: donor.studentMappings,
+          isBlocked: donor.isBlocked
+        }))}
+        totalTransactionAmount={getSelectedTransactionsAmount()}
+        totalDonorAmount={getMappingAmount()}
+        onConfirm={handleMapping}
+        processing={processing}
+        title="Confirm Payment Mapping"
+        showDonorTotalDonated={true}
+        showDonorAllocated={true}
+        showDonorStatus={false}
+        showTransactionStatus={false}
+      />
 
-               <Card className="border-green-200 bg-green-50">
-                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-medium text-green-700">Available Amount</CardTitle>
-                 </CardHeader>
-                 <CardContent className="pt-0">
-                  <div className="text-2xl font-bold text-green-700">₹{getMappingAmount().toLocaleString()}</div>
-                  <div className="text-xs text-green-600">{donors.length} Donors</div>
-                 </CardContent>
-               </Card>
-
-              <Card className={`${
-                getSelectedTransactionsAmount() < getMappingAmount() 
-                  ? 'border-green-200 bg-green-50' 
-                  : getSelectedTransactionsAmount() === getMappingAmount()
-                  ? 'border-blue-200 bg-blue-50'
-                  : 'border-red-200 bg-red-50'
-              }`}>
-                 <CardHeader className="pb-2">
-                   <CardTitle className="text-xs font-medium">Status</CardTitle>
-                 </CardHeader>
-                 <CardContent className="pt-0">
-                  <div className={`text-2xl font-bold ${
-                    getSelectedTransactionsAmount() < getMappingAmount() 
-                      ? 'text-green-700' 
-                      : getSelectedTransactionsAmount() === getMappingAmount()
-                      ? 'text-blue-700'
-                      : 'text-red-700'
-                  }`}>
-                    {getSelectedTransactionsAmount() < getMappingAmount() 
-                      ? 'Sufficient' 
-                      : getSelectedTransactionsAmount() === getMappingAmount()
-                      ? 'Exact Match'
-                      : 'Insufficient'
-                    }
-                   </div>
-                   <div className="text-xs text-muted-foreground">
-                    {getSelectedTransactionsAmount() < getMappingAmount() 
-                      ? `Surplus: ₹${(getMappingAmount() - getSelectedTransactionsAmount()).toLocaleString()}`
-                      : getSelectedTransactionsAmount() === getMappingAmount()
-                      ? 'Perfect Match'
-                      : `Shortfall: ₹${(getSelectedTransactionsAmount() - getMappingAmount()).toLocaleString()}`
-                     }
-                   </div>
-                 </CardContent>
-               </Card>
-             </div>
-
-             {/* Selected Donors */}
-             <div>
-               <h3 className="text-lg font-semibold mb-3 text-green-700">Selected Donors</h3>
-               <div className="max-h-48 overflow-y-auto border rounded-md">
-                 <Table>
-                   <TableHeader className="sticky top-0 bg-background z-10">
-                     <TableRow>
-                       <TableHead>Donor ID</TableHead>
-                       <TableHead>Name</TableHead>
-                       <TableHead>Total Donated</TableHead>
-                       <TableHead>Allocated</TableHead>
-                       <TableHead>Unallocated Amount</TableHead>
-                     </TableRow>
-                   </TableHeader>
-                   <TableBody>
-                    {donors.map(donor => (
-                      <TableRow key={donor.donorId} className={donor.isBlocked ? "bg-red-50" : ""}>
-                        <TableCell className="font-medium">{donor.donorId}</TableCell>
-                        <TableCell>{donor.donorName}</TableCell>
-                        <TableCell>₹{donor.totalDonated.toLocaleString()}</TableCell>
-                        <TableCell>₹{donor.studentMappings.reduce((sum: number, mapping: any) => sum + mapping.amount, 0).toLocaleString()}</TableCell>
-                        <TableCell>₹{getUnallocatedAmount(donor).toLocaleString()}</TableCell>
-                       </TableRow>
-                     ))}
-                   </TableBody>
-                 </Table>
-               </div>
-             </div>
-
-             {/* Selected Transactions */}
-             <div>
-               <h3 className="text-lg font-semibold mb-3 text-blue-700">Selected Transactions</h3>
-               <div className="max-h-48 overflow-y-auto border rounded-md">
-                 <Table>
-                   <TableHeader className="sticky top-0 bg-background z-10">
-                     <TableRow>
-                       <TableHead>Transaction ID</TableHead>
-                       <TableHead>Student</TableHead>
-                       <TableHead>College</TableHead>
-                       <TableHead>Amount</TableHead>
-                       <TableHead>Date</TableHead>
-                     </TableRow>
-                   </TableHeader>
-                   <TableBody>
-                    {filteredTransactions.filter(transaction => selectedTransactions.includes(transaction.id)).map(transaction => (
-                       <TableRow key={transaction.id}>
-                         <TableCell className="font-medium">{transaction.id}</TableCell>
-                         <TableCell>
-                           <div>{transaction.studentName}</div>
-                           <div className="text-sm text-muted-foreground">{transaction.studentId}</div>
-                         </TableCell>
-                         <TableCell>{transaction.college}</TableCell>
-                         <TableCell>₹{transaction.amount.toLocaleString()}</TableCell>
-                         <TableCell>{transaction.date}</TableCell>
-                       </TableRow>
-                     ))}
-                   </TableBody>
-                 </Table>
-               </div>
-             </div>
-
-             {/* Warning Message */}
-             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-               <div className="flex items-start gap-3">
-                 <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                 <div className="text-sm text-yellow-800">
-                   <div className="font-medium mb-1">Important:</div>
-                   <ul className="space-y-1 text-xs">
-                    <li>• This action will map all selected transactions to the available donors</li>
-                     <li>• The donor amounts will be allocated to cover the transaction amounts</li>
-                     <li>• This action cannot be undone once confirmed</li>
-                    {getSelectedTransactionsAmount() < getMappingAmount() && (
-                       <li className="text-green-600 font-medium">
-                        • Surplus amount (₹{(getMappingAmount() - getSelectedTransactionsAmount()).toLocaleString()}) will be returned to the donor with the highest remaining unallocated amount
-                      </li>
-                    )}
-                    {getSelectedTransactionsAmount() === getMappingAmount() && (
-                      <li className="text-blue-600 font-medium">
-                        • Perfect match - all mapping amount will be used
-                       </li>
-                     )}
-                    {getSelectedTransactionsAmount() > getMappingAmount() && (
-                      <li className="text-red-600 font-medium">• Warning: Insufficient mapping amount - some transactions may not be fully covered</li>
-                     )}
-                   </ul>
-                 </div>
-               </div>
-             </div>
-           </div>
-
-           <div className="flex justify-end gap-3 mt-6">
-             <Button 
-               variant="outline" 
-               onClick={() => setShowConfirmDialog(false)}
-               disabled={processing}
-             >
-               Cancel
-             </Button>
-             <Button 
-               variant="default" 
-               onClick={handleMapping}
-              disabled={processing || getSelectedTransactionsAmount() > getMappingAmount()}
-               className="bg-blue-600 hover:bg-blue-700"
-             >
-               {processing ? (
-                 <>
-                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                   Processing...
-                 </>
-               ) : (
-                 <>
-                   <CheckCircle className="h-4 w-4 mr-2" />
-                   Confirm Mapping
-                 </>
-               )}
-             </Button>
-           </div>
-         </DialogContent>
-       </Dialog>
+      {/* Result Popup */}
+      <MappingResultPopup
+        open={showResultPopup}
+        onOpenChange={setShowResultPopup}
+        result={mappingResult}
+        onClose={() => {
+          setShowResultPopup(false);
+          setMappingResult(null);
+          // Navigate to donors page after popup closes
+          navigate('/admin/donors');
+        }}
+      />
     </div>
   );
 } 
